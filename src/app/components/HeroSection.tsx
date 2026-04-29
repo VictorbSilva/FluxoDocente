@@ -20,9 +20,8 @@ export function HeroSection({ onGetStarted }: HeroSectionProps) {
                 <span className='text-[#21a3a3] block'>história</span>
               </h1>
               <p className='text-lg md:text-xl text-gray-700 leading-relaxed'>
-                O crime não é o único caminho. Descubra novas possibilidades,
-                aprenda habilidades que transformam vidas e construa o futuro
-                que você merece.
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
               </p>
             </div>
 

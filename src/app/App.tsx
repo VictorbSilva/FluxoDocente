@@ -136,27 +136,28 @@ export default function App() {
                 </div>
               </div>
               <p className='text-gray-300 text-sm leading-relaxed'>
-                Acreditamos que todo mundo merece uma segunda chance. Estamos
-                aqui para apoiar sua jornada de transformação.
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
               </p>
             </div>
 
             <div>
               <h4 className='text-lg mb-4'>Aprenda</h4>
               <ul className='space-y-2 text-sm text-gray-300'>
-                <li>Histórias de Superação</li>
-                <li>Educação Financeira</li>
-                <li>Empreendedorismo</li>
-                <li>Tecnologia</li>
-                <li>Habilidades Práticas</li>
+                 <li>Notion</li>
+                <li>Gamma</li>
+                <li>NotebookLM</li>
+                <li>Perplexity</li>
+                <li>IA Generativa</li>
+                <li>Prezi</li>
               </ul>
             </div>
 
             <div>
               <h4 className='text-lg mb-4'>Suporte</h4>
               <ul className='space-y-2 text-sm text-gray-300'>
-                <li>Central de Ajuda</li>
-                <li>WhatsApp: (11) 9999-9999</li>
+                 <li>Central de Ajuda</li>
+                <li>WhatsApp: (83) 99999-9999</li>
                 <li>contato@fluxodocente.com.br</li>
                 <li>Acompanhamento 24/7</li>
               </ul>
@@ -168,8 +169,7 @@ export default function App() {
               © 2024 FluxoDocente. Transformando vidas através da educação.
             </p>
             <p className='text-[#6cf3d5] text-sm mt-2'>
-              💚 "O crime não é o único caminho. Você pode escrever sua própria
-              história."
+             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
             </p>
           </div>
         </div>
