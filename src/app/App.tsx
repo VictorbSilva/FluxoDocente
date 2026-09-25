@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
+import { LoginSection } from './components/LoginSection';
 import { CategoryGrid } from './components/CategoryGrid';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ProgressSection } from './components/ProgressSection';
 import { toast, Toaster } from 'sonner';
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentSection, setCurrentSection] = useState('home');
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [userProgress, setUserProgress] = useState({
@@ -109,6 +111,17 @@ export default function App() {
     }
   };
 
+  // =======================================================================
+  // GUARDA DE ROTA (ROUTE GUARD) - Tático para a Apresentação
+  // Se não estiver autenticado, encerra a renderização aqui e exibe o Login
+  // =======================================================================
+  if (!isAuthenticated) {
+    return <LoginSection onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  // =======================================================================
+  // APLICAÇÃO PRINCIPAL - Só renderiza se a guarda de rota for ultrapassada
+  // =======================================================================
   return (
     <div className='min-h-screen bg-white'>
       <Header
@@ -130,14 +143,12 @@ export default function App() {
                 </div>
                 <div>
                   <h3 className='text-xl'>FluxoDocente</h3>
-                  <p className='text-gray-400 text-sm'>
-                    Inovação Educacional
-                  </p>
+                  <p className='text-gray-400 text-sm'>Inovação Educacional</p>
                 </div>
               </div>
               <p className='text-gray-300 text-sm leading-relaxed'>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                "A inovação tecnológica não substitui o docente ela potencializa
+                a sua capacidade de inspirar."
               </p>
             </div>
 
@@ -167,7 +178,8 @@ export default function App() {
               © 2026 FluxoDocente. Transformando vidas através da educação.
             </p>
             <p className='text-[#6cf3d5] text-sm mt-2'>
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+              "A inovação tecnológica não substitui o docente ela potencializa a
+              sua capacidade de inspirar."
             </p>
           </div>
         </div>
