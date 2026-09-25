@@ -1,0 +1,32 @@
+{
+  "descricao": "Site instrucional do TCC FluxoDocente (React 18 + Vite + TypeScript + Tailwind 4) sobre letramento digital de docentes do ensino superior em ferramentas de IA. Só front-end, sem backend: o login é apenas interface.",
+  "branchesProtegidas": ["main", "master"],
+  "aprovarAntesDeEditar": [],
+  "checagemDeTipos": {
+    "comando": "npx tsc --noEmit -p tsconfig.json",
+    "ignorarErrosEm": ["src/app/components/ui/"]
+  },
+  "aoParar": [
+    { "seMudar": "\\.(tsx?|css)$", "script": "build" }
+  ],
+  "revisao": {
+    "base": "origin/main",
+    "sensiveis": [
+      "^src/app/App\\.tsx$",
+      "^src/app/components/[^/]+\\.tsx$",
+      "^src/styles/",
+      "^src/main\\.tsx$",
+      "^(index\\.html|vite\\.config\\.ts|package\\.json)$"
+    ],
+    "focos": [
+      "componentes ou fluxos quebrados (estado, props, navegação entre seções)",
+      "acessibilidade: textos alternativos, rótulos de formulário, contraste, navegação por teclado",
+      "layout que quebra em telas pequenas",
+      "links externos com target=_blank sem rel=noopener",
+      "textos com erro de português ou informação trocada entre categorias"
+    ],
+    "documentos": ["CLAUDE.md"],
+    "armadilhas": null,
+    "anexarInteiro": []
+  }
+}
