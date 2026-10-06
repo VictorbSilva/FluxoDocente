@@ -34,6 +34,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false`), Tailwind 4 via `@tailwindcss
 
 - Toda alteração vai numa branch, nunca direto na `main` (decidido após os conflitos do commit `8e8aa42`).
 - Revisão antes do merge: `node .claude/scripts/revisar-pr.mjs`.
+- Nos commits, não adicione link de sessão (`Claude-Session: ...`) nem linha `Co-Authored-By` do assistente.
 
 ## Regras de trabalho
 
