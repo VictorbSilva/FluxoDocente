@@ -1,5 +1,5 @@
 {
-  "descricao": "Site instrucional do TCC FluxoDocente (React 18 + Vite + TypeScript + Tailwind 4) sobre letramento digital de docentes do ensino superior em ferramentas de IA. Só front-end, sem backend: o login é apenas interface.",
+  "descricao": "Site instrucional do TCC FluxoDocente sobre letramento digital de docentes do ensino superior em ferramentas de IA. Front React 18 + Vite + TypeScript + Tailwind 4 em src/; backend Node + Express + TypeScript + Postgres em server/; tipos e catálogo em shared/.",
   "branchesProtegidas": ["main", "master"],
   "aprovarAntesDeEditar": [],
   "checagemDeTipos": {
@@ -7,7 +7,8 @@
     "ignorarErrosEm": ["src/app/components/ui/"]
   },
   "aoParar": [
-    { "seMudar": "\\.(tsx?|css)$", "script": "build" }
+    { "seMudar": "\\.(tsx?|css)$", "script": "build" },
+    { "seMudar": "^(server|shared)/", "script": "test" }
   ],
   "revisao": {
     "base": "origin/main",
@@ -16,14 +17,18 @@
       "^src/app/components/[^/]+\\.tsx$",
       "^src/styles/",
       "^src/main\\.tsx$",
-      "^(index\\.html|vite\\.config\\.ts|package\\.json)$"
+      "^(index\\.html|vite\\.config\\.ts|package\\.json)$",
+      "^server/",
+      "^shared/"
     ],
     "focos": [
       "componentes ou fluxos quebrados (estado, props, navegação entre seções)",
       "acessibilidade: textos alternativos, rótulos de formulário, contraste, navegação por teclado",
       "layout que quebra em telas pequenas",
       "links externos com target=_blank sem rel=noopener",
-      "textos com erro de português ou informação trocada entre categorias"
+      "textos com erro de português ou informação trocada entre categorias",
+      "rotas de progresso sempre filtradas pelo userId da sessão, nunca por dado vindo do cliente",
+      "segredos, senhas ou connection strings no código, em respostas ou em logs"
     ],
     "documentos": ["CLAUDE.md"],
     "armadilhas": null,

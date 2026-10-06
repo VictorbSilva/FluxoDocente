@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-Orientação para o Claude Code neste repositório.
+Orientação para o Codex neste repositório.
 
 ## Projeto
 
@@ -51,3 +51,15 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false`), Tailwind 4 via `@tailwindcss
 7. Vídeos pelo embed do YouTube (iframe de `youtube-nocookie.com`), sem YouTube Data API e sem hospedagem de mídia.
 8. Catálogo de módulos e aulas em `shared/catalog.ts`, com conteúdo fornecido pelos autores. O ID da aula é um slug estável, nunca o ID do vídeo. Motivo: trocar o vídeo não pode apagar o progresso.
 9. O dono do progresso vem sempre da sessão. Nenhuma rota aceita `userId` no corpo, na query ou no caminho.
+
+## Executar tarefa
+
+Quando um prompt começar com "Siga a seção "Executar tarefa" do AGENTS.md", ele veio de uma sessão de planejamento que já investigou o problema. Implemente o plano com precisão; não o repense.
+
+Antes de mexer no código: (1) leia o prompt inteiro, este arquivo, os arquivos listados em "Arquivos" e os documentos citados em "Contexto", sem refazer a investigação; (2) confira que funções, componentes, tipos e arquivos citados existem como descrito, e se não existirem, pare e relate; (3) se estiver na `main`, crie uma branch curta baseada no título (ex.: `feat/titulo`). Nunca faça commit na `main`.
+
+Durante: siga os passos na ordem; em mudança de comportamento com testes, escreva o teste antes e confirme que ele falha pelo motivo certo; altere só os arquivos listados, exceto consequência mecânica óbvia (um import); não invente regra de negócio, conteúdo, campo ou validação; não refatore nem corrija erros antigos registrados como conhecidos (anote para o relatório).
+
+Pare sem improvisar quando o código contradiz o plano, o critério de pronto não é alcançável seguindo os passos ou falta uma decisão. Relate com: "PAREI NA TAREFA: [título]", "O que encontrei", "Onde: caminho:linha", "Por que impede de seguir", "Opções que vejo (sem escolher)", "O que já foi feito".
+
+Ao terminar: rode cada comando do critério de pronto e confirme o resultado; faça commit na branch, sem push e sem PR; entregue "Tarefa concluída: [título]", o resultado de cada comando, os arquivos alterados, um rascunho de PR (o que muda, por quê, alternativa descartada), o que testar à mão e o que notou fora do escopo.
