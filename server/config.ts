@@ -17,3 +17,13 @@ export function lerPorta(): number {
 
   return porta;
 }
+
+export function lerDatabaseUrl(nome: 'DATABASE_URL' | 'TEST_DATABASE_URL'): string {
+  const url = process.env[nome];
+
+  if (!url?.trim()) {
+    throw new Error(`Defina ${nome} no .env`);
+  }
+
+  return url;
+}
