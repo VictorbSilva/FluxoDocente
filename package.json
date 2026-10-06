@@ -3,10 +3,16 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "dev:server": "tsx watch server/index.ts",
+    "build": "vite build && tsc -p tsconfig.server.json",
+    "preview": "vite preview --host 0.0.0.0",
+    "start": "node dist-server/server/index.js",
+    "typecheck:server": "tsc -p tsconfig.server.json --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.9",
@@ -14,6 +20,8 @@
     "@radix-ui/react-slot": "1.1.2",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
     "lucide-react": "0.487.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -23,8 +31,11 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.5",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
+    "tsx": "^4.23.15",
     "typescript": "5.8.3",
     "vite": "^6.4.2"
   }
