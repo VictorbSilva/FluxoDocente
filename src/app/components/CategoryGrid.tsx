@@ -1,100 +1,14 @@
 import { Card, CardHeader, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Play, Clock, Users, Star } from 'lucide-react';
-
-interface Category {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  videoCount: number;
-  duration: string;
-  difficulty: 'Iniciante' | 'Intermediário' | 'Avançado';
-  color: string;
-  tags: string[];
-}
+import { Play, Clock } from 'lucide-react';
+import { modules, lessons } from '../../../shared/catalog';
 
 interface CategoryGridProps {
   onCategorySelect: (categoryId: string) => void;
 }
 
 export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
-  const categories: Category[] = [
-    {
-      id: 'notion-basics', //modificar ids 
-      title: 'Módulo 1: Pesquisa e Fundamentação',
-      description:
-        'Capacitação em Engenharia de Prompts para validação de informações essenciais.',
-      icon: '📓',
-      videoCount: 25,
-      duration: '2-15 min',
-      difficulty: 'Intermediário',
-      color: 'from-[#13c8b5] to-[#21a3a3]',
-      tags: ['Gemini', 'ChatGPT', 'Claude', 'Perplexity', 'Consensus'],
-    },
-    {
-      id: 'gamma-slides',
-      title: 'Módulo 2: Design de Atividades e Inclusão',
-      description:
-        'Geração ágil de exercícios, provas e feedbacks.',
-      icon: '⚡',
-      videoCount: 18,
-      duration: '5-20 min',
-      difficulty: 'Iniciante',
-      color: 'from-[#21a3a3] to-[#6cf3d5]',
-      tags: ['NotebookLM', 'ChatGPT', 'Claude'],
-    },
-    {
-      id: 'notebooklm-research',
-      title: 'Módulo 3: Produção de Materiais Visuais',
-      description:
-        'Criação acelerada de objetos visuais de aprendizagem para aulas práticas e teóricas.',
-      icon: '📚',
-      videoCount: 22,
-      duration: '10-25 min',
-      difficulty: 'Intermediário',
-      color: 'from-[#7375a5] to-[#2b364a]',
-      tags: ['Gamma', 'Gemini', 'ChatGPT'],
-    },
-    {
-      id: 'perplexity-search',
-      title: 'Módulo 4: Gestão de Rotina e Burocracia',
-      description:
-        'Automação do atendimento ao aluno, controle e organização automatizada de notas.',
-      icon: '🕵️',
-      videoCount: 30,
-      duration: '8-30 min',
-      difficulty: 'Intermediário',
-      color: 'from-orange-500 to-red-500',
-      tags: ['Notion', 'Trello', 'ClickUp'],
-    },
-    /*{
-      id: 'gen-ai-prompts',
-      title: 'IA Generativa (Gemini, Copilot, GPT)',
-      description:
-        'Fundamentos de Engenharia de Prompts para docentes utilizarem assistentes virtuais na criação de exercícios e rubricas.',
-      icon: '🤖',
-      videoCount: 20,
-      duration: '6-18 min',
-      difficulty: 'Avançado',
-      color: 'from-[#7375a5] to-[#21a3a3]',
-      tags: ['Prompts', 'Avaliação', 'Inovação'],
-    },
-    {
-      id: 'prezi-dynamics',
-      title: 'Prezi (Slides)',
-      description:
-        'Estruturação de apresentações não-lineares focadas em storytelling e retenção da atenção dos estudantes.',
-      icon: '🎯',
-      videoCount: 35,
-      duration: '15-40 min',
-      difficulty: 'Intermediário',
-      color: 'from-[#6cf3d5] to-[#13c8b5]',
-      tags: ['Engajamento', 'Visual', 'Storytelling'],
-    }, */
-  ]; 
-
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Iniciante':
@@ -121,68 +35,73 @@ export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
         </div>
 
         <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {categories.map((category) => (
-            <Card
-              key={category.id}
-              className='group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md'
-            >
-              <div
-                className={`h-2 bg-gradient-to-r ${category.color} rounded-t-lg`}
-              ></div>
+          {modules.map((module) => {
+            const total = lessons.filter((l) => l.moduleId === module.id).length;
 
-              <CardHeader className='pb-4'>
-                <div className='flex items-start justify-between'>
-                  <div className='flex items-center gap-3'>
-                    <div className='text-3xl'>{category.icon}</div>
-                    <div>
-                      <h3 className='text-lg text-gray-900 group-hover:text-[#21a3a3] transition-colors'>
-                        {category.title}
-                      </h3>
-                      <Badge
-                        variant='secondary'
-                        className={getDifficultyColor(category.difficulty)}
-                      >
-                        {category.difficulty}
-                      </Badge>
+            return (
+              <Card
+                key={module.id}
+                className='group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md'
+              >
+                <div
+                  className={`h-2 bg-gradient-to-r ${module.color} rounded-t-lg`}
+                ></div>
+
+                <CardHeader className='pb-4'>
+                  <div className='flex items-start justify-between'>
+                    <div className='flex items-center gap-3'>
+                      <div className='text-3xl'>{module.icon}</div>
+                      <div>
+                        <h3 className='text-lg text-gray-900 group-hover:text-[#21a3a3] transition-colors'>
+                          {module.title}
+                        </h3>
+                        <Badge
+                          variant='secondary'
+                          className={getDifficultyColor(module.difficulty)}
+                        >
+                          {module.difficulty}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className='space-y-4'>
-                <p className='text-sm text-gray-600 leading-relaxed'>
-                  {category.description}
-                </p>
+                <CardContent className='space-y-4'>
+                  <p className='text-sm text-gray-600 leading-relaxed'>
+                    {module.description}
+                  </p>
 
-                <div className='flex items-center gap-4 text-xs text-gray-500'>
-                  <div className='flex items-center gap-1'>
-                    <Play className='h-3 w-3' />
-                    {category.videoCount} vídeos
+                  <div className='flex items-center gap-4 text-xs text-gray-500'>
+                    <div className='flex items-center gap-1'>
+                      <Play className='h-3 w-3' />
+                      {total} {total === 1 ? 'aula' : 'aulas'}
+                    </div>
+                    <div className='flex items-center gap-1'>
+                      <Clock className='h-3 w-3' />
+                      {module.duration}
+                    </div>
                   </div>
-                  <div className='flex items-center gap-1'>
-                    <Clock className='h-3 w-3' />
-                    {category.duration}
+
+                  <div className='flex flex-wrap gap-1'>
+                    {module.tags.map((tag) => (
+                      <Badge key={tag} variant='outline' className='text-xs'>
+                        {tag}
+                      </Badge>
+                    ))}
                   </div>
-                </div>
 
-                <div className='flex flex-wrap gap-1'>
-                  {category.tags.map((tag) => (
-                    <Badge key={tag} variant='outline' className='text-xs'>
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-
-                <Button
-                  onClick={() => onCategorySelect(category.id)}
-                  className='w-full mt-4 bg-gradient-to-r bg-[#21a3a3] hover:bg-[#13c8b5]'
-                >
-                  <Play className='h-4 w-4 mr-2' />
-                  Começar Curso
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                  <Button
+                    onClick={() => onCategorySelect(module.id)}
+                    disabled={total === 0}
+                    className='w-full mt-4 bg-gradient-to-r bg-[#21a3a3] hover:bg-[#13c8b5]'
+                  >
+                    <Play className='h-4 w-4 mr-2' />
+                    {total === 0 ? 'Aulas em breve' : 'Começar Curso'}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </section>
