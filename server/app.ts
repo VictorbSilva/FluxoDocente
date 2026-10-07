@@ -1,8 +1,17 @@
 import express from 'express';
 import helmet from 'helmet';
 import path from 'node:path';
+import type pg from 'pg';
+import { criarRotasDeAuth } from './auth/rotas.js';
+import { criarMiddlewareDeSessao } from './auth/sessao.js';
 
-export function createApp(opcoes: { production: boolean }): express.Express {
+const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+export function createApp(opcoes: {
+  production: boolean;
+  pool: pg.Pool;
+  sessionSecret: string;
+}): express.Express {
   const app = express();
 
   if (opcoes.production) {
@@ -21,9 +30,30 @@ export function createApp(opcoes: { production: boolean }): express.Express {
 
   app.use('/api', express.json({ limit: '10kb' }));
 
+  // Além do SameSite=Lax, toda requisição que altera estado exige um cabeçalho
+  // próprio, que um formulário de outro site não consegue enviar.
+  app.use('/api', (req, res, next) => {
+    if (!METODOS_SEGUROS.has(req.method) && req.get('X-FluxoDocente') !== '1') {
+      res.status(403).json({
+        error: { code: 'origem_invalida', message: 'Requisição recusada.' },
+      });
+      return;
+    }
+
+    next();
+  });
+
+  app.use('/api', criarMiddlewareDeSessao({
+    pool: opcoes.pool,
+    secret: opcoes.sessionSecret,
+    production: opcoes.production,
+  }));
+
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
   });
+
+  app.use('/api/auth', criarRotasDeAuth(opcoes.pool, opcoes.production));
 
   app.use('/api', (_req, res) => {
     res.status(404).json({
