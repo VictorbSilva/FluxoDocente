@@ -7,73 +7,18 @@ import type pg from 'pg';
 import { createApp } from '../app.js';
 import { hashSenha } from '../auth/senha.js';
 import { prepararBanco } from './ajuda.js';
+import { novoCliente } from './http.js';
 
 const SENHA = 'senha-correta-123';
-
-interface Resposta {
-  status: number;
-  corpo: any;
-  setCookie: string[];
-}
-
-interface OpcoesDeEnvio {
-  corpo?: unknown;
-  cookie?: string;
-  semCabecalho?: boolean;
-}
 
 let pool: pg.Pool;
 const servidores: Server[] = [];
 
 async function subirApp(): Promise<string> {
-  const servidor = createApp({ production: false, pool, sessionSecret: 'x'.repeat(40) }).listen(0);
+  const servidor = createApp({ production: false, pool, sessionSecret: 'x'.repeat(40), lessonIds: new Set() }).listen(0);
   servidores.push(servidor);
   await once(servidor, 'listening');
   return `http://localhost:${(servidor.address() as AddressInfo).port}`;
-}
-
-function novoCliente(baseUrl: string) {
-  let cookie: string | undefined;
-
-  return {
-    get cookie() {
-      return cookie;
-    },
-
-    async enviar(metodo: string, caminho: string, opcoes: OpcoesDeEnvio = {}): Promise<Resposta> {
-      const headers: Record<string, string> = {};
-
-      if (opcoes.corpo !== undefined) {
-        headers['content-type'] = 'application/json';
-      }
-
-      if (metodo !== 'GET' && !opcoes.semCabecalho) {
-        headers['x-fluxodocente'] = '1';
-      }
-
-      const cookieEnviado = opcoes.cookie ?? cookie;
-
-      if (cookieEnviado) {
-        headers.cookie = cookieEnviado;
-      }
-
-      const resposta = await fetch(baseUrl + caminho, {
-        method: metodo,
-        headers,
-        body: opcoes.corpo === undefined ? undefined : JSON.stringify(opcoes.corpo),
-      });
-      const setCookie = resposta.headers.getSetCookie();
-      const sid = setCookie.find((valor) => valor.startsWith('fd.sid='));
-
-      if (sid) {
-        const par = sid.split(';')[0];
-        cookie = par === 'fd.sid=' ? undefined : par;
-      }
-
-      const texto = await resposta.text();
-      return { status: resposta.status, corpo: texto ? JSON.parse(texto) : null, setCookie };
-    },
-  };
 }
 
 async function criarUsuario(email: string): Promise<string> {
