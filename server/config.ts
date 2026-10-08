@@ -27,3 +27,13 @@ export function lerDatabaseUrl(nome: 'DATABASE_URL' | 'TEST_DATABASE_URL'): stri
 
   return url;
 }
+
+export function lerSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+
+  if (!secret || secret.length < 32) {
+    throw new Error('Defina SESSION_SECRET no .env com pelo menos 32 caracteres');
+  }
+
+  return secret;
+}

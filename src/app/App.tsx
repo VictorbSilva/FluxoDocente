@@ -5,11 +5,20 @@ import { LoginSection } from './components/LoginSection';
 import { CategoryGrid } from './components/CategoryGrid';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ProgressSection } from './components/ProgressSection';
+import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
 import { modules, lessons } from '../../shared/catalog';
+import type { UserDTO } from '../../shared/contracts';
+import { ApiError, entrar, sair, sessaoAtual } from './lib/api';
+
+type Sessao =
+  | { estado: 'carregando' }
+  | { estado: 'anonima' }
+  | { estado: 'erro' }
+  | { estado: 'autenticada'; usuario: UserDTO };
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [sessao, setSessao] = useState<Sessao>({ estado: 'carregando' });
   const [currentSection, setCurrentSection] = useState('home');
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [userProgress, setUserProgress] = useState({
@@ -19,6 +28,40 @@ export default function App() {
     certificatesEarned: 3,
     currentStreak: 5,
   });
+
+  const consultarSessao = () => {
+    setSessao({ estado: 'carregando' });
+    sessaoAtual()
+      .then((usuario) => setSessao({ estado: 'autenticada', usuario }))
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 401) {
+          setSessao({ estado: 'anonima' });
+        } else {
+          setSessao({ estado: 'erro' });
+        }
+      });
+  };
+
+  useEffect(() => {
+    consultarSessao();
+  }, []);
+
+  const handleLogin = async (email: string, senha: string) => {
+    const usuario = await entrar(email, senha);
+    setSessao({ estado: 'autenticada', usuario });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await sair();
+    } catch (err) {
+      toast.error(err.message);
+      return;
+    }
+    setSessao({ estado: 'anonima' });
+    setCurrentSection('home');
+    setSelectedLessonId(null);
+  };
 
   const handleSectionChange = (section: string) => {
     setCurrentSection(section);
@@ -106,12 +149,48 @@ export default function App() {
     }
   };
 
+  const toaster = (
+    <Toaster
+      position='top-right'
+      toastOptions={{
+        style: {
+          background: '#21a3a3',
+          color: 'white',
+          border: 'none',
+        },
+      }}
+    />
+  );
+
   // =======================================================================
-  // GUARDA DE ROTA (ROUTE GUARD) - Tático para a Apresentação
-  // Se não estiver autenticado, encerra a renderização aqui e exibe o Login
+  // GUARDA DE ROTA (ROUTE GUARD)
+  // Enquanto a sessão não estiver confirmada pelo servidor, encerra a
+  // renderização aqui: carregando, erro de conexão ou tela de login
   // =======================================================================
-  if (!isAuthenticated) {
-    return <LoginSection onLoginSuccess={() => setIsAuthenticated(true)} />;
+  if (sessao.estado === 'carregando') {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <p className='text-gray-500'>Carregando...</p>
+      </div>
+    );
+  }
+
+  if (sessao.estado === 'erro') {
+    return (
+      <div className='min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center'>
+        <p className='text-gray-700'>Não foi possível conectar ao servidor.</p>
+        <Button onClick={consultarSessao}>Tentar novamente</Button>
+      </div>
+    );
+  }
+
+  if (sessao.estado === 'anonima') {
+    return (
+      <>
+        <LoginSection onLogin={handleLogin} />
+        {toaster}
+      </>
+    );
   }
 
   // =======================================================================
@@ -122,7 +201,8 @@ export default function App() {
       <Header
         currentSection={currentSection}
         onSectionChange={handleSectionChange}
-        userPoints={userProgress.points}
+        userEmail={sessao.usuario.email}
+        onLogout={handleLogout}
       />
 
       <main>{renderCurrentSection()}</main>
@@ -177,16 +257,7 @@ export default function App() {
         </div>
       </footer>
 
-      <Toaster
-        position='top-right'
-        toastOptions={{
-          style: {
-            background: '#21a3a3',
-            color: 'white',
-            border: 'none',
-          },
-        }}
-      />
+      {toaster}
     </div>
   );
 }
