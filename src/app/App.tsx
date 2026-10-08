@@ -6,11 +6,12 @@ import { CategoryGrid } from './components/CategoryGrid';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ProgressSection } from './components/ProgressSection';
 import { toast, Toaster } from 'sonner';
+import { modules, lessons } from '../../shared/catalog';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentSection, setCurrentSection] = useState('home');
-  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [userProgress, setUserProgress] = useState({
     points: 485,
     totalVideos: 150,
@@ -19,24 +20,9 @@ export default function App() {
     currentStreak: 5,
   });
 
-  // Mock video data
-  const mockVideo = {
-    id: '1',
-    title: 'Como montar seus slides no Gamma',
-    description:
-      'Aula detalhada sobre como utilizar o Gamma para criar apresentações eficazes.',
-    duration: '12:30',
-    instructor: 'Mirela Ferraz',
-    category: 'Histórias de Superação',
-    tags: ['Apresentação', 'IA Visual', 'Agilidade'],
-    thumbnail: '',
-    progress: 0,
-    completed: false,
-  };
-
   const handleSectionChange = (section: string) => {
     setCurrentSection(section);
-    setSelectedVideo(null);
+    setSelectedLessonId(null);
   };
 
   const handleGetStarted = () => {
@@ -44,9 +30,13 @@ export default function App() {
     toast.success('Vamos começar sua jornada de transformação! 🚀');
   };
 
-  const handleCategorySelect = (categoryId: string) => {
-    setSelectedVideo(mockVideo);
-    toast.info('Carregando vídeo... Prepare-se para se inspirar! ✨');
+  const handleCategorySelect = (moduleId: string) => {
+    const lesson = lessons.find((l) => l.moduleId === moduleId);
+    if (!lesson) {
+      toast.info('Este módulo ainda não tem aulas publicadas.');
+      return;
+    }
+    setSelectedLessonId(lesson.id);
   };
 
   const handleVideoComplete = () => {
@@ -67,13 +57,18 @@ export default function App() {
   };
 
   const renderCurrentSection = () => {
-    if (selectedVideo) {
+    if (selectedLessonId) {
+      const lesson = lessons.find((l) => l.id === selectedLessonId);
+      const module = modules.find((m) => m.id === lesson.moduleId);
+      const moduleLessons = lessons.filter((l) => l.moduleId === lesson.moduleId);
+
       return (
         <VideoPlayer
-          video={selectedVideo}
+          lesson={lesson}
+          module={module}
+          moduleLessons={moduleLessons}
+          onSelectLesson={setSelectedLessonId}
           onVideoComplete={handleVideoComplete}
-          onNextVideo={() => toast.info('Carregando próximo vídeo...')}
-          onPrevVideo={() => toast.info('Voltando ao vídeo anterior...')}
         />
       );
     }
@@ -155,10 +150,7 @@ export default function App() {
             <div>
               <h4 className='text-lg mb-4'>Aprenda</h4>
               <ul className='space-y-2 text-sm text-gray-300'>
-                <li>Módulo 1: Pesquisa e Fundamentação</li>
-                <li>Módulo 2: Design de Atividades e Inclusão</li>
-                <li>Módulo 3: Produção de Materiais Visuais</li>
-                <li>Módulo 4: Gestão de Rotina e Burocracia</li>
+                {modules.map((m) => <li key={m.id}>{m.title}</li>)}
               </ul>
             </div>
 
