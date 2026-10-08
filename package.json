@@ -15,6 +15,7 @@
     "typecheck:server": "tsc -p tsconfig.server.json --noEmit",
     "db:migrar": "tsx server/scripts/migrar.ts",
     "db:migrar:prod": "node dist-server/server/scripts/migrar.js",
+    "usuarios": "tsx server/scripts/usuarios.ts",
     "test": "node --import tsx --test --test-concurrency=1 \"server/tests/**/*.test.ts\""
   },
   "dependencies": {
