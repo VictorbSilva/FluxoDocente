@@ -6,9 +6,12 @@ export function gerarSenha(): string {
   return randomBytes(9).toString('base64url');
 }
 
-export async function criarUsuario(pool: pg.Pool, email: string): Promise<{ email: string; senha: string }> {
+export async function criarUsuario(pool: pg.Pool, email: string, senha?: string): Promise<{ email: string; senha: string }> {
+  if (senha !== undefined && (senha.length < 8 || senha.length > 200)) {
+    throw new Error('A senha precisa ter de 8 a 200 caracteres.');
+  }
   const normalizado = email.trim().toLowerCase();
-  const senha = gerarSenha();
+  senha ??= gerarSenha();
   const hash = await hashSenha(senha);
 
   try {
@@ -24,9 +27,12 @@ export async function criarUsuario(pool: pg.Pool, email: string): Promise<{ emai
   return { email: normalizado, senha };
 }
 
-export async function resetarSenha(pool: pg.Pool, email: string): Promise<{ email: string; senha: string }> {
+export async function resetarSenha(pool: pg.Pool, email: string, senha?: string): Promise<{ email: string; senha: string }> {
+  if (senha !== undefined && (senha.length < 8 || senha.length > 200)) {
+    throw new Error('A senha precisa ter de 8 a 200 caracteres.');
+  }
   const normalizado = email.trim().toLowerCase();
-  const senha = gerarSenha();
+  senha ??= gerarSenha();
   const hash = await hashSenha(senha);
   const client = await pool.connect();
 
