@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import path from 'node:path';
 import type pg from 'pg';
 import { criarRotasDeAuth } from './auth/rotas.js';
-import { criarMiddlewareDeSessao, exigirLogin } from './auth/sessao.js';
+import { criarExigirLogin, criarMiddlewareDeSessao } from './auth/sessao.js';
 import { criarRotasDeProgresso } from './progresso/rotas.js';
 
 const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -56,7 +56,11 @@ export function createApp(opcoes: {
   });
 
   app.use('/api/auth', criarRotasDeAuth(opcoes.pool, opcoes.production));
-  app.use('/api/me', exigirLogin, criarRotasDeProgresso(opcoes.pool, opcoes.lessonIds));
+  app.use(
+    '/api/me',
+    criarExigirLogin(opcoes.pool, opcoes.production),
+    criarRotasDeProgresso(opcoes.pool, opcoes.lessonIds),
+  );
 
   app.use('/api', (_req, res) => {
     res.status(404).json({

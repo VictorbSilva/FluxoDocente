@@ -3,8 +3,8 @@ import { rateLimit } from 'express-rate-limit';
 import { randomBytes } from 'node:crypto';
 import type pg from 'pg';
 import type { UserDTO } from '../../shared/contracts.js';
-import { hashSenha, verificarSenha } from './senha.js';
-import { exigirLogin, responderNaoAutenticado } from './sessao.js';
+import { hashSenha, impressaoDaSenha, verificarSenha } from './senha.js';
+import { criarExigirLogin, responderNaoAutenticado } from './sessao.js';
 
 // Usado quando o e-mail não existe: a verificação roda do mesmo jeito para que
 // o tempo de resposta não revele se a conta existe.
@@ -36,6 +36,7 @@ function destruirSessao(req: express.Request): Promise<void> {
 
 export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Router {
   const router = express.Router();
+  const exigirLogin = criarExigirLogin(pool, production);
 
   const limitarLogin = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -85,6 +86,8 @@ export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Ro
 
     await regenerarSessao(req);
     req.session.userId = usuario.id;
+    // Impressão do mesmo hash que acabou de ser verificado, não de uma nova leitura.
+    req.session.senhaImpressao = impressaoDaSenha(usuario.password_hash);
     await salvarSessao(req);
 
     const user: UserDTO = { id: usuario.id, email: usuario.email };

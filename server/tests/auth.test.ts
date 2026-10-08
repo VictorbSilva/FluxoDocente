@@ -122,6 +122,30 @@ test('logout encerra a sessão e o cookie antigo deixa de valer', async () => {
   assert.equal(depois.status, 401);
 });
 
+test('sessão criada antes da troca de senha deixa de valer', async () => {
+  const id = await criarUsuario('troca@exemplo.com');
+  const cliente = novoCliente(baseUrl);
+  await cliente.enviar('POST', '/api/auth/login', {
+    corpo: { email: 'troca@exemplo.com', password: SENHA },
+  });
+  const cookieAntigo = cliente.cookie;
+  assert.ok(cookieAntigo);
+
+  // Troca o hash sem apagar as sessões, como num login que termina depois do reset.
+  await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [
+    await hashSenha('outra-senha'),
+    id,
+  ]);
+
+  const primeira = await cliente.enviar('GET', '/api/auth/me', { cookie: cookieAntigo });
+  assert.equal(primeira.status, 401);
+  assert.equal(primeira.corpo.error.code, 'nao_autenticado');
+
+  const segunda = await cliente.enviar('GET', '/api/auth/me', { cookie: cookieAntigo });
+  assert.equal(segunda.status, 401);
+  assert.equal(segunda.corpo.error.code, 'nao_autenticado');
+});
+
 test('login sem o cabeçalho X-FluxoDocente é recusado', async () => {
   const cliente = novoCliente(baseUrl);
   const resposta = await cliente.enviar('POST', '/api/auth/login', {

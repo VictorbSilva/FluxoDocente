@@ -1,4 +1,4 @@
-import { randomBytes, scrypt, timingSafeEqual, type ScryptOptions } from 'node:crypto';
+import { createHash, randomBytes, scrypt, timingSafeEqual, type ScryptOptions } from 'node:crypto';
 
 // Parâmetros recomendados pela OWASP. Com N=32768 e r=8 o scrypt usa 32 MiB,
 // exatamente o limite padrão do Node, por isso o maxmem maior.
@@ -60,4 +60,9 @@ export async function verificarSenha(senha: string, armazenado: string): Promise
   });
 
   return timingSafeEqual(obtido, esperado);
+}
+
+// Guardada na sessão no lugar do hash: se a senha mudar, a impressão muda e a sessão cai.
+export function impressaoDaSenha(passwordHash: string): string {
+  return createHash('sha256').update(passwordHash).digest('hex');
 }

@@ -2,10 +2,12 @@ import connectPgSimple from 'connect-pg-simple';
 import session from 'express-session';
 import type express from 'express';
 import type pg from 'pg';
+import { impressaoDaSenha } from './senha.js';
 
 declare module 'express-session' {
   interface SessionData {
     userId: string;
+    senhaImpressao: string;
   }
 }
 
@@ -44,11 +46,32 @@ export function responderNaoAutenticado(res: express.Response): void {
   });
 }
 
-export const exigirLogin: express.RequestHandler = (req, res, next) => {
-  if (!req.session.userId) {
-    responderNaoAutenticado(res);
-    return;
-  }
+// A sessão só vale enquanto a senha for a mesma do login. Isso cobre o login que
+// termina depois de um reset de senha ter apagado as sessões existentes.
+export function criarExigirLogin(pool: pg.Pool, production: boolean): express.RequestHandler {
+  return async (req, res, next) => {
+    if (!req.session.userId) {
+      responderNaoAutenticado(res);
+      return;
+    }
 
-  next();
-};
+    const { rows } = await pool.query<{ password_hash: string }>(
+      'SELECT password_hash FROM users WHERE id = $1',
+      [req.session.userId],
+    );
+    const usuario = rows[0];
+
+    if (!usuario || impressaoDaSenha(usuario.password_hash) !== req.session.senhaImpressao) {
+      await new Promise<void>((resolve, reject) => {
+        req.session.destroy((erro) => (erro ? reject(erro) : resolve()));
+      });
+      res.clearCookie('fd.sid', { httpOnly: true, sameSite: 'lax', secure: production });
+      res.status(401).json({
+        error: { code: 'nao_autenticado', message: 'Sua sessão expirou. Entre novamente.' },
+      });
+      return;
+    }
+
+    next();
+  };
+}
