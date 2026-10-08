@@ -1,19 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { BookOpen, Mail, Lock, ArrowRight } from 'lucide-react';
+import { ApiError } from '../lib/api';
 
 interface LoginSectionProps {
-  onLoginSuccess: () => void;
+  onLogin: (email: string, senha: string) => Promise<void>;
 }
 
-export function LoginSection({ onLoginSuccess }: LoginSectionProps) {
-  const handleSubmit = (e: React.FormEvent) => {
+export function LoginSection({ onLogin }: LoginSectionProps) {
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Bypass tático para o vídeo do TCC: aprova o login instantaneamente
-    onLoginSuccess();
+    setErro(null);
+    setEnviando(true);
+    try {
+      await onLogin(email, senha);
+    } catch (err) {
+      if (!(err instanceof ApiError)) throw err;
+      setErro(err.message);
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -50,7 +64,11 @@ export function LoginSection({ onLoginSuccess }: LoginSectionProps) {
                 <Mail className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
                 <Input
                   id='email'
+                  name='email'
                   type='email'
+                  autoComplete='email'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder='docente@instituicao.edu.br'
                   className='pl-10 border-gray-200 focus:border-[#21a3a3] focus:ring-[#21a3a3] h-10'
                   required
@@ -66,18 +84,19 @@ export function LoginSection({ onLoginSuccess }: LoginSectionProps) {
                 >
                   Senha
                 </Label>
-                <a
-                  href='#'
-                  className='text-xs text-[#21a3a3] hover:underline font-medium'
-                >
-                  Esqueceu a senha?
-                </a>
+                <p className='text-xs text-gray-500'>
+                  Esqueceu a senha? Fale com a equipe do projeto.
+                </p>
               </div>
               <div className='relative'>
                 <Lock className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
                 <Input
                   id='password'
+                  name='password'
                   type='password'
+                  autoComplete='current-password'
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
                   placeholder='••••••••'
                   className='pl-10 border-gray-200 focus:border-[#21a3a3] focus:ring-[#21a3a3] h-10'
                   required
@@ -85,15 +104,22 @@ export function LoginSection({ onLoginSuccess }: LoginSectionProps) {
               </div>
             </div>
 
+            {erro && (
+              <p role='alert' className='text-sm text-red-600'>
+                {erro}
+              </p>
+            )}
+
             {/* Reduzimos a margem superior do botão para mt-2 */}
             <Button
               type='submit'
+              disabled={enviando}
               className='w-full text-white shadow-lg hover:opacity-90 transition-opacity h-11 text-base mt-2'
               style={{
                 background: 'linear-gradient(to right, #2b364a, #21a3a3)',
               }}
             >
-              Fazer Login
+              {enviando ? 'Entrando...' : 'Fazer Login'}
               <ArrowRight className='ml-2 h-4 w-4' />
             </Button>
           </form>

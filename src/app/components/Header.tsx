@@ -1,17 +1,19 @@
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Menu, Trophy, User, BookOpen } from 'lucide-react';
+import { LogOut, BookOpen } from 'lucide-react';
 
 interface HeaderProps {
   currentSection: string;
   onSectionChange: (section: string) => void;
-  userPoints: number;
+  userEmail: string;
+  onLogout: () => void;
 }
 
 export function Header({
   currentSection,
   onSectionChange,
-  userPoints,
+  userEmail,
+  onLogout,
 }: HeaderProps) {
   const navItems = [
     { id: 'home', label: 'Início', icon: '🏠' },
@@ -57,23 +59,17 @@ export function Header({
 
           {/* User Info */}
           <div className='flex items-center gap-3'>
-            <div className='flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full'>
-              <Trophy className='h-4 w-4' style={{ color: '#6cf3d5' }} />
-              <span className='text-sm'>{userPoints}</span>
-            </div>
+            <span className='hidden sm:inline text-sm text-white/80'>
+              {userEmail}
+            </span>
             <Button
               variant='ghost'
               size='sm'
+              onClick={onLogout}
               className='text-white hover:bg-white/10'
             >
-              <User className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='md:hidden text-white hover:bg-white/10'
-            >
-              <Menu className='h-4 w-4' />
+              <LogOut className='h-4 w-4' />
+              Sair
             </Button>
           </div>
         </div>
