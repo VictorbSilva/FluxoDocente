@@ -268,7 +268,7 @@ export function VideoPlayer({
                   disabled={texto === salvo || salvandoNota}
                   className='bg-[#177a7a] hover:bg-[#136d6d]'
                 >
-                  Salvar
+                  {salvandoNota ? 'Salvando...' : 'Salvar'}
                 </Button>
                 <span className='text-sm text-gray-600'>
                   {pendente

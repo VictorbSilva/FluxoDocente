@@ -39,6 +39,12 @@ export default function App() {
   const [progressoCarregado, setProgressoCarregado] = useState(false);
   // Anotação com alterações não salvas no player, informada pelo VideoPlayer.
   const pendenteRef = useRef(false);
+  // Tela e aula exibidas agora, lidas pelo listener de popstate.
+  const rotaAtualRef = useRef({
+    section: currentSection,
+    lessonId: selectedLessonId,
+  });
+  rotaAtualRef.current = { section: currentSection, lessonId: selectedLessonId };
 
   const consultarSessao = () => {
     setSessao({ estado: 'carregando' });
@@ -67,6 +73,16 @@ export default function App() {
     }
 
     const aoNavegar = () => {
+      // O popstate não pode ser cancelado: se a pessoa desistir de sair da
+      // anotação não salva, o endereço da tela atual volta para o histórico.
+      if (pendenteRef.current) {
+        if (!window.confirm(PERGUNTA_SAIR_SEM_SALVAR)) {
+          const { section, lessonId } = rotaAtualRef.current;
+          history.pushState(null, '', caminhoDe(section, lessonId));
+          return;
+        }
+        pendenteRef.current = false;
+      }
       const rota = lerRota(window.location.pathname);
       setCurrentSection(rota.section);
       setSelectedLessonId(rota.lessonId);
@@ -103,6 +119,7 @@ export default function App() {
 
   const tratarErro = (err) => {
     if (err instanceof ApiError && err.status === 401) {
+      pendenteRef.current = false;
       setSessao({ estado: 'anonima' });
       setConcluidas(new Map());
       toast.info('Sua sessão expirou. Entre novamente.');
@@ -143,6 +160,9 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    if (pendenteRef.current && !window.confirm(PERGUNTA_SAIR_SEM_SALVAR)) {
+      return;
+    }
     try {
       await sair();
     } catch (err) {
