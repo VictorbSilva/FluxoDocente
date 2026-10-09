@@ -23,7 +23,7 @@ export function Header({
 
   return (
     <header
-      style={{ background: 'linear-gradient(to right, #2b364a, #21a3a3)' }}
+      style={{ background: 'linear-gradient(to right, #2b364a, #177a7a)' }}
       className='text-white shadow-lg sticky top-0 z-50'
     >
       <div className='max-w-7xl mx-auto px-4 py-3'>

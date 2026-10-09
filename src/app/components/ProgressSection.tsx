@@ -54,6 +54,7 @@ export function ProgressSection({
                   </p>
                 )}
                 <Progress
+                  aria-label='Aulas concluídas no curso'
                   value={total ? (feitas / total) * 100 : 0}
                   className='h-3'
                 />
@@ -79,6 +80,7 @@ export function ProgressSection({
                           </span>
                         </div>
                         <Progress
+                          aria-label={'Progresso em ' + m.title}
                           value={
                             aulas.length ? (feitasModulo / aulas.length) * 100 : 0
                           }
