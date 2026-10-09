@@ -1,6 +1,6 @@
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { Play, ArrowRight, Users, BookOpen } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface HeroSectionProps {

@@ -1,5 +1,4 @@
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { LogOut, BookOpen } from 'lucide-react';
 
 interface HeaderProps {
