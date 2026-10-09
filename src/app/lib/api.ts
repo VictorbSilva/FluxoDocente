@@ -1,4 +1,9 @@
-import type { ApiErrorBody, UserDTO } from '../../../shared/contracts';
+import type {
+  ApiErrorBody,
+  CompletionDTO,
+  ProgressDTO,
+  UserDTO,
+} from '../../../shared/contracts';
 
 export class ApiError extends Error {
   status: number;
@@ -80,4 +85,15 @@ export async function sessaoAtual(): Promise<UserDTO> {
 
 export function sair(): Promise<void> {
   return requisitar<void>('/auth/logout', { method: 'POST' });
+}
+
+export function progresso(): Promise<ProgressDTO> {
+  return requisitar<ProgressDTO>('/me/progress');
+}
+
+export function concluirAula(lessonId: string): Promise<CompletionDTO> {
+  return requisitar<CompletionDTO>(
+    '/me/progress/' + encodeURIComponent(lessonId),
+    { method: 'PUT' },
+  );
 }

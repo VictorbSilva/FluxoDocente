@@ -9,7 +9,15 @@ import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
 import { modules, lessons } from '../../shared/catalog';
 import type { UserDTO } from '../../shared/contracts';
-import { ApiError, entrar, sair, sessaoAtual } from './lib/api';
+import {
+  ApiError,
+  concluirAula,
+  entrar,
+  progresso,
+  sair,
+  sessaoAtual,
+} from './lib/api';
+import { caminhoDe, lerRota } from './lib/rotas';
 
 type Sessao =
   | { estado: 'carregando' }
@@ -19,15 +27,16 @@ type Sessao =
 
 export default function App() {
   const [sessao, setSessao] = useState<Sessao>({ estado: 'carregando' });
-  const [currentSection, setCurrentSection] = useState('home');
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-  const [userProgress, setUserProgress] = useState({
-    points: 485,
-    totalVideos: 150,
-    completedVideos: 23,
-    certificatesEarned: 3,
-    currentStreak: 5,
-  });
+  const [currentSection, setCurrentSection] = useState<string>(
+    () => lerRota(window.location.pathname).section,
+  );
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(
+    () => lerRota(window.location.pathname).lessonId,
+  );
+  const [concluidas, setConcluidas] = useState<Map<string, string>>(
+    () => new Map(),
+  );
+  const [progressoCarregado, setProgressoCarregado] = useState(false);
 
   const consultarSessao = () => {
     setSessao({ estado: 'carregando' });
@@ -46,6 +55,69 @@ export default function App() {
     consultarSessao();
   }, []);
 
+  // O endereço acompanha a tela: corrige um caminho inválido na abertura e
+  // aplica o Voltar/Avançar do navegador sem empilhar outra entrada.
+  useEffect(() => {
+    const inicial = lerRota(window.location.pathname);
+    const canonico = caminhoDe(inicial.section, inicial.lessonId);
+    if (window.location.pathname !== canonico) {
+      history.replaceState(null, '', canonico);
+    }
+
+    const aoNavegar = () => {
+      const rota = lerRota(window.location.pathname);
+      setCurrentSection(rota.section);
+      setSelectedLessonId(rota.lessonId);
+    };
+    window.addEventListener('popstate', aoNavegar);
+    return () => window.removeEventListener('popstate', aoNavegar);
+  }, []);
+
+  const irPara = (section: string, lessonId: string | null) => {
+    setCurrentSection(section);
+    setSelectedLessonId(lessonId);
+    const caminho = caminhoDe(section, lessonId);
+    if (caminho !== window.location.pathname) {
+      history.pushState(null, '', caminho);
+    }
+  };
+
+  const tratarErro = (err) => {
+    if (err instanceof ApiError && err.status === 401) {
+      setSessao({ estado: 'anonima' });
+      setConcluidas(new Map());
+      toast.info('Sua sessão expirou. Entre novamente.');
+    } else {
+      toast.error(err.message);
+    }
+  };
+
+  const usuarioId = sessao.estado === 'autenticada' ? sessao.usuario.id : null;
+
+  useEffect(() => {
+    setConcluidas(new Map());
+    setProgressoCarregado(false);
+    if (!usuarioId) return;
+
+    let cancelado = false;
+    progresso()
+      .then(({ completions }) => {
+        if (cancelado) return;
+        setConcluidas(
+          new Map(completions.map((c) => [c.lessonId, c.completedAt])),
+        );
+        setProgressoCarregado(true);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        tratarErro(err);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [usuarioId]);
+
   const handleLogin = async (email: string, senha: string) => {
     const usuario = await entrar(email, senha);
     setSessao({ estado: 'autenticada', usuario });
@@ -59,17 +131,18 @@ export default function App() {
       return;
     }
     setSessao({ estado: 'anonima' });
+    setConcluidas(new Map());
+    history.replaceState(null, '', '/');
     setCurrentSection('home');
     setSelectedLessonId(null);
   };
 
   const handleSectionChange = (section: string) => {
-    setCurrentSection(section);
-    setSelectedLessonId(null);
+    irPara(section, null);
   };
 
   const handleGetStarted = () => {
-    setCurrentSection('courses');
+    irPara('courses', null);
     toast.success('Vamos começar sua jornada de transformação! 🚀');
   };
 
@@ -79,16 +152,18 @@ export default function App() {
       toast.info('Este módulo ainda não tem aulas publicadas.');
       return;
     }
-    setSelectedLessonId(lesson.id);
+    irPara(currentSection, lesson.id);
   };
 
-  const handleVideoComplete = () => {
-    setUserProgress((prev) => ({
-      ...prev,
-      points: prev.points + 10,
-      completedVideos: prev.completedVideos + 1,
-    }));
-    toast.success('🎉 Vídeo concluído! +10 pontos conquistados!');
+  const handleConcluir = async (lessonId: string): Promise<void> => {
+    if (concluidas.has(lessonId)) return;
+    try {
+      const { completedAt } = await concluirAula(lessonId);
+      setConcluidas((anterior) => new Map(anterior).set(lessonId, completedAt));
+      toast.success('Aula marcada como concluída.');
+    } catch (err) {
+      tratarErro(err);
+    }
   };
 
   const handleApplyOpportunity = (opportunityId: string) => {
@@ -103,15 +178,15 @@ export default function App() {
     if (selectedLessonId) {
       const lesson = lessons.find((l) => l.id === selectedLessonId);
       const module = modules.find((m) => m.id === lesson.moduleId);
-      const moduleLessons = lessons.filter((l) => l.moduleId === lesson.moduleId);
 
       return (
         <VideoPlayer
           lesson={lesson}
           module={module}
-          moduleLessons={moduleLessons}
-          onSelectLesson={setSelectedLessonId}
-          onVideoComplete={handleVideoComplete}
+          onSelectLesson={(id) => irPara(currentSection, id)}
+          concluidas={concluidas}
+          carregado={progressoCarregado}
+          onConcluir={handleConcluir}
         />
       );
     }
@@ -131,11 +206,10 @@ export default function App() {
       case 'progress':
         return (
           <ProgressSection
-            userPoints={userProgress.points}
-            totalVideos={userProgress.totalVideos}
-            completedVideos={userProgress.completedVideos}
-            certificatesEarned={userProgress.certificatesEarned}
-            currentStreak={userProgress.currentStreak}
+            modules={modules}
+            lessons={lessons}
+            concluidas={concluidas}
+            carregado={progressoCarregado}
           />
         );
 
