@@ -1,6 +1,7 @@
 import type {
   ApiErrorBody,
   CompletionDTO,
+  NoteDTO,
   ProgressDTO,
   UserDTO,
 } from '../../../shared/contracts';
@@ -95,5 +96,16 @@ export function concluirAula(lessonId: string): Promise<CompletionDTO> {
   return requisitar<CompletionDTO>(
     '/me/progress/' + encodeURIComponent(lessonId),
     { method: 'PUT' },
+  );
+}
+
+export function anotacao(lessonId: string): Promise<NoteDTO> {
+  return requisitar<NoteDTO>('/me/notes/' + encodeURIComponent(lessonId));
+}
+
+export function salvarAnotacao(lessonId: string, content: string): Promise<NoteDTO> {
+  return requisitar<NoteDTO>(
+    '/me/notes/' + encodeURIComponent(lessonId),
+    { method: 'PUT', body: { content } },
   );
 }

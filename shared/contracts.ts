@@ -12,6 +12,12 @@ export interface ProgressDTO {
   completions: CompletionDTO[];
 }
 
+export interface NoteDTO {
+  lessonId: string;
+  content: string;
+  updatedAt: string | null; // ISO 8601; null quando não há anotação
+}
+
 export interface ApiErrorBody {
   error: { code: string; message: string };
 }

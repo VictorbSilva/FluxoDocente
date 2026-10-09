@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Award, CheckCircle, ChevronDown, Clock, Users } from 'lucide-react';
 import { modules, lessons } from '../../../shared/catalog';
 import type { Lesson, Module } from '../../../shared/contracts';
+import { anotacao, salvarAnotacao } from '../lib/api';
+
+export const PERGUNTA_SAIR_SEM_SALVAR =
+  'Você tem alterações não salvas nesta anotação. Sair sem salvar?';
 
 interface VideoPlayerProps {
   lesson: Lesson;
@@ -13,6 +18,8 @@ interface VideoPlayerProps {
   concluidas: ReadonlyMap<string, string>;
   carregado: boolean;
   onConcluir: (lessonId: string) => Promise<void>;
+  onAlteracoesPendentes: (pendente: boolean) => void;
+  onErro: (err: unknown) => void;
 }
 
 export function VideoPlayer({
@@ -22,13 +29,86 @@ export function VideoPlayer({
   concluidas,
   carregado,
   onConcluir,
+  onAlteracoesPendentes,
+  onErro,
 }: VideoPlayerProps) {
   const [salvando, setSalvando] = useState(false);
   const [abertos, setAbertos] = useState<Set<string>>(() => new Set());
+  const [texto, setTexto] = useState('');
+  const [salvo, setSalvo] = useState('');
+  const [atualizadoEm, setAtualizadoEm] = useState<string | null>(null);
+  const [carregandoNota, setCarregandoNota] = useState(true);
+  const [salvandoNota, setSalvandoNota] = useState(false);
+  const aulaAtual = useRef(lesson.id);
+  aulaAtual.current = lesson.id;
 
   useEffect(() => {
     setSalvando(false);
   }, [lesson.id]);
+
+  useEffect(() => {
+    setTexto('');
+    setSalvo('');
+    setAtualizadoEm(null);
+    setCarregandoNota(true);
+    setSalvandoNota(false);
+
+    let cancelado = false;
+    anotacao(lesson.id)
+      .then((nota) => {
+        if (cancelado) return;
+        setTexto(nota.content);
+        setSalvo(nota.content);
+        setAtualizadoEm(nota.updatedAt);
+        setCarregandoNota(false);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        // O campo continua bloqueado: sem a nota do servidor, salvar
+        // apagaria o que já existe.
+        onErro(err);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [lesson.id]);
+
+  const pendente = texto !== salvo;
+
+  useEffect(() => {
+    onAlteracoesPendentes(pendente);
+  }, [pendente]);
+
+  const trocarDeAula = (id: string) => {
+    if (pendente) {
+      if (!window.confirm(PERGUNTA_SAIR_SEM_SALVAR)) return;
+      // Avisa o App antes de navegar, para o irPara não repetir a pergunta.
+      onAlteracoesPendentes(false);
+    }
+    onSelectLesson(id);
+  };
+
+  const salvarNota = async () => {
+    const aulaSalva = lesson.id;
+    const enviado = texto;
+    setSalvandoNota(true);
+    try {
+      const nota = await salvarAnotacao(aulaSalva, enviado);
+      toast.success('Anotação salva.');
+      // Se a aula mudou durante o envio, a resposta não vale para a aula atual.
+      if (aulaAtual.current !== aulaSalva) return;
+      setSalvo(nota.content);
+      // Texto só com espaços apaga a nota: o campo acompanha, a menos que
+      // tenha sido editado durante o envio.
+      setTexto((atual) => (atual === enviado ? nota.content : atual));
+      setAtualizadoEm(nota.updatedAt);
+    } catch (err) {
+      onErro(err);
+    } finally {
+      if (aulaAtual.current === aulaSalva) setSalvandoNota(false);
+    }
+  };
 
   const concluida = concluidas.has(lesson.id);
 
@@ -86,7 +166,7 @@ export function VideoPlayer({
             <Button
               variant='outline'
               className='flex-1'
-              onClick={() => onSelectLesson(anterior.id)}
+              onClick={() => trocarDeAula(anterior.id)}
               disabled={!anterior}
             >
               Aula anterior
@@ -94,7 +174,7 @@ export function VideoPlayer({
             <Button
               variant='outline'
               className='flex-1'
-              onClick={() => onSelectLesson(proxima.id)}
+              onClick={() => trocarDeAula(proxima.id)}
               disabled={!proxima}
             >
               Próxima aula
@@ -165,6 +245,44 @@ export function VideoPlayer({
               </div>
             </div>
           </Card>
+
+          {/* Notes */}
+          <Card className='p-6'>
+            <div className='space-y-3'>
+              <h3 className='text-lg text-gray-900'>Minhas anotações</h3>
+              <textarea
+                aria-label='Minhas anotações sobre esta aula'
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                maxLength={5000}
+                rows={6}
+                disabled={carregandoNota}
+                className='w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#177a7a] focus:outline-none focus:ring-1 focus:ring-[#177a7a] disabled:cursor-not-allowed disabled:opacity-50'
+              />
+              <p className='text-xs text-gray-500 text-right'>
+                {texto.length}/5000
+              </p>
+              <div className='flex flex-wrap items-center gap-3'>
+                <Button
+                  onClick={salvarNota}
+                  disabled={texto === salvo || salvandoNota}
+                  className='bg-[#177a7a] hover:bg-[#136d6d]'
+                >
+                  {salvandoNota ? 'Salvando...' : 'Salvar'}
+                </Button>
+                <span className='text-sm text-gray-600'>
+                  {pendente
+                    ? 'Alterações não salvas'
+                    : atualizadoEm &&
+                      'Salvo às ' +
+                        new Date(atualizadoEm).toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                </span>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Sidebar */}
@@ -224,7 +342,7 @@ export function VideoPlayer({
                         <li key={l.id}>
                           <button
                             type='button'
-                            onClick={() => onSelectLesson(l.id)}
+                            onClick={() => trocarDeAula(l.id)}
                             aria-current={l.id === lesson.id ? 'true' : undefined}
                             className={`w-full p-2 rounded-lg text-left ${
                               l.id === lesson.id

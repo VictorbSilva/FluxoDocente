@@ -80,6 +80,7 @@ Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). O front não te
 7. Vídeos pelo embed do YouTube (iframe de `youtube-nocookie.com`), sem YouTube Data API e sem hospedagem de mídia.
 8. Catálogo de módulos e aulas em `shared/catalog.ts`, com conteúdo fornecido pelos autores. O ID da aula é um slug estável, nunca o ID do vídeo. Motivo: trocar o vídeo não pode apagar o progresso.
 9. O dono do progresso vem sempre da sessão. Nenhuma rota aceita `userId` no corpo, na query ou no caminho.
+10. Anotações: uma anotação livre por aula por usuário, salva por ele; até 5.000 caracteres; privadas, a equipe da pesquisa não lê. Motivo: apoio ao estudo sem virar dado da pesquisa.
 
 ## Executar tarefa
 

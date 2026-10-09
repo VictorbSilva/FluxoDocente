@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { LoginSection } from './components/LoginSection';
 import { CategoryGrid } from './components/CategoryGrid';
-import { VideoPlayer } from './components/VideoPlayer';
+import { PERGUNTA_SAIR_SEM_SALVAR, VideoPlayer } from './components/VideoPlayer';
 import { ProgressSection } from './components/ProgressSection';
 import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
@@ -37,6 +37,14 @@ export default function App() {
     () => new Map(),
   );
   const [progressoCarregado, setProgressoCarregado] = useState(false);
+  // Anotação com alterações não salvas no player, informada pelo VideoPlayer.
+  const pendenteRef = useRef(false);
+  // Tela e aula exibidas agora, lidas pelo listener de popstate.
+  const rotaAtualRef = useRef({
+    section: currentSection,
+    lessonId: selectedLessonId,
+  });
+  rotaAtualRef.current = { section: currentSection, lessonId: selectedLessonId };
 
   const consultarSessao = () => {
     setSessao({ estado: 'carregando' });
@@ -65,6 +73,16 @@ export default function App() {
     }
 
     const aoNavegar = () => {
+      // O popstate não pode ser cancelado: se a pessoa desistir de sair da
+      // anotação não salva, o endereço da tela atual volta para o histórico.
+      if (pendenteRef.current) {
+        if (!window.confirm(PERGUNTA_SAIR_SEM_SALVAR)) {
+          const { section, lessonId } = rotaAtualRef.current;
+          history.pushState(null, '', caminhoDe(section, lessonId));
+          return;
+        }
+        pendenteRef.current = false;
+      }
       const rota = lerRota(window.location.pathname);
       setCurrentSection(rota.section);
       setSelectedLessonId(rota.lessonId);
@@ -73,7 +91,24 @@ export default function App() {
     return () => window.removeEventListener('popstate', aoNavegar);
   }, []);
 
+  // F5 e fechar a aba avisam enquanto houver anotação não salva.
+  useEffect(() => {
+    const avisarAoSair = (event: BeforeUnloadEvent) => {
+      if (!pendenteRef.current) return;
+      event.preventDefault();
+      event.returnValue = ''; // navegadores antigos só avisam com returnValue
+    };
+    window.addEventListener('beforeunload', avisarAoSair);
+    return () => window.removeEventListener('beforeunload', avisarAoSair);
+  }, []);
+
   const irPara = (section: string, lessonId: string | null) => {
+    const mudaDeLugar =
+      section !== currentSection || lessonId !== selectedLessonId;
+    if (pendenteRef.current && mudaDeLugar) {
+      if (!window.confirm(PERGUNTA_SAIR_SEM_SALVAR)) return;
+      pendenteRef.current = false;
+    }
     setCurrentSection(section);
     setSelectedLessonId(lessonId);
     const caminho = caminhoDe(section, lessonId);
@@ -84,6 +119,7 @@ export default function App() {
 
   const tratarErro = (err) => {
     if (err instanceof ApiError && err.status === 401) {
+      pendenteRef.current = false;
       setSessao({ estado: 'anonima' });
       setConcluidas(new Map());
       toast.info('Sua sessão expirou. Entre novamente.');
@@ -124,12 +160,16 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    if (pendenteRef.current && !window.confirm(PERGUNTA_SAIR_SEM_SALVAR)) {
+      return;
+    }
     try {
       await sair();
     } catch (err) {
       toast.error(err.message);
       return;
     }
+    pendenteRef.current = false;
     setSessao({ estado: 'anonima' });
     setConcluidas(new Map());
     history.replaceState(null, '', '/');
@@ -187,6 +227,10 @@ export default function App() {
           concluidas={concluidas}
           carregado={progressoCarregado}
           onConcluir={handleConcluir}
+          onAlteracoesPendentes={(pendente) => {
+            pendenteRef.current = pendente;
+          }}
+          onErro={tratarErro}
         />
       );
     }
