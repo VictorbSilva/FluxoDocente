@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { LoginSection } from './components/LoginSection';
 import { CategoryGrid } from './components/CategoryGrid';
-import { VideoPlayer } from './components/VideoPlayer';
+import { PERGUNTA_SAIR_SEM_SALVAR, VideoPlayer } from './components/VideoPlayer';
 import { ProgressSection } from './components/ProgressSection';
 import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
@@ -37,6 +37,8 @@ export default function App() {
     () => new Map(),
   );
   const [progressoCarregado, setProgressoCarregado] = useState(false);
+  // Anotação com alterações não salvas no player, informada pelo VideoPlayer.
+  const pendenteRef = useRef(false);
 
   const consultarSessao = () => {
     setSessao({ estado: 'carregando' });
@@ -73,7 +75,24 @@ export default function App() {
     return () => window.removeEventListener('popstate', aoNavegar);
   }, []);
 
+  // F5 e fechar a aba avisam enquanto houver anotação não salva.
+  useEffect(() => {
+    const avisarAoSair = (event: BeforeUnloadEvent) => {
+      if (!pendenteRef.current) return;
+      event.preventDefault();
+      event.returnValue = ''; // navegadores antigos só avisam com returnValue
+    };
+    window.addEventListener('beforeunload', avisarAoSair);
+    return () => window.removeEventListener('beforeunload', avisarAoSair);
+  }, []);
+
   const irPara = (section: string, lessonId: string | null) => {
+    const mudaDeLugar =
+      section !== currentSection || lessonId !== selectedLessonId;
+    if (pendenteRef.current && mudaDeLugar) {
+      if (!window.confirm(PERGUNTA_SAIR_SEM_SALVAR)) return;
+      pendenteRef.current = false;
+    }
     setCurrentSection(section);
     setSelectedLessonId(lessonId);
     const caminho = caminhoDe(section, lessonId);
@@ -130,6 +149,7 @@ export default function App() {
       toast.error(err.message);
       return;
     }
+    pendenteRef.current = false;
     setSessao({ estado: 'anonima' });
     setConcluidas(new Map());
     history.replaceState(null, '', '/');
@@ -187,6 +207,10 @@ export default function App() {
           concluidas={concluidas}
           carregado={progressoCarregado}
           onConcluir={handleConcluir}
+          onAlteracoesPendentes={(pendente) => {
+            pendenteRef.current = pendente;
+          }}
+          onErro={tratarErro}
         />
       );
     }
