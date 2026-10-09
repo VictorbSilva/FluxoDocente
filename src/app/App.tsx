@@ -9,7 +9,14 @@ import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
 import { modules, lessons } from '../../shared/catalog';
 import type { UserDTO } from '../../shared/contracts';
-import { ApiError, entrar, sair, sessaoAtual } from './lib/api';
+import {
+  ApiError,
+  concluirAula,
+  entrar,
+  progresso,
+  sair,
+  sessaoAtual,
+} from './lib/api';
 
 type Sessao =
   | { estado: 'carregando' }
@@ -21,13 +28,10 @@ export default function App() {
   const [sessao, setSessao] = useState<Sessao>({ estado: 'carregando' });
   const [currentSection, setCurrentSection] = useState('home');
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-  const [userProgress, setUserProgress] = useState({
-    points: 485,
-    totalVideos: 150,
-    completedVideos: 23,
-    certificatesEarned: 3,
-    currentStreak: 5,
-  });
+  const [concluidas, setConcluidas] = useState<Map<string, string>>(
+    () => new Map(),
+  );
+  const [progressoCarregado, setProgressoCarregado] = useState(false);
 
   const consultarSessao = () => {
     setSessao({ estado: 'carregando' });
@@ -46,6 +50,42 @@ export default function App() {
     consultarSessao();
   }, []);
 
+  const tratarErro = (err) => {
+    if (err instanceof ApiError && err.status === 401) {
+      setSessao({ estado: 'anonima' });
+      setConcluidas(new Map());
+      toast.info('Sua sessão expirou. Entre novamente.');
+    } else {
+      toast.error(err.message);
+    }
+  };
+
+  const usuarioId = sessao.estado === 'autenticada' ? sessao.usuario.id : null;
+
+  useEffect(() => {
+    setConcluidas(new Map());
+    setProgressoCarregado(false);
+    if (!usuarioId) return;
+
+    let cancelado = false;
+    progresso()
+      .then(({ completions }) => {
+        if (cancelado) return;
+        setConcluidas(
+          new Map(completions.map((c) => [c.lessonId, c.completedAt])),
+        );
+        setProgressoCarregado(true);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        tratarErro(err);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [usuarioId]);
+
   const handleLogin = async (email: string, senha: string) => {
     const usuario = await entrar(email, senha);
     setSessao({ estado: 'autenticada', usuario });
@@ -59,6 +99,7 @@ export default function App() {
       return;
     }
     setSessao({ estado: 'anonima' });
+    setConcluidas(new Map());
     setCurrentSection('home');
     setSelectedLessonId(null);
   };
@@ -82,13 +123,15 @@ export default function App() {
     setSelectedLessonId(lesson.id);
   };
 
-  const handleVideoComplete = () => {
-    setUserProgress((prev) => ({
-      ...prev,
-      points: prev.points + 10,
-      completedVideos: prev.completedVideos + 1,
-    }));
-    toast.success('🎉 Vídeo concluído! +10 pontos conquistados!');
+  const handleConcluir = async (lessonId: string): Promise<void> => {
+    if (concluidas.has(lessonId)) return;
+    try {
+      const { completedAt } = await concluirAula(lessonId);
+      setConcluidas((anterior) => new Map(anterior).set(lessonId, completedAt));
+      toast.success('Aula marcada como concluída.');
+    } catch (err) {
+      tratarErro(err);
+    }
   };
 
   const handleApplyOpportunity = (opportunityId: string) => {
@@ -111,7 +154,8 @@ export default function App() {
           module={module}
           moduleLessons={moduleLessons}
           onSelectLesson={setSelectedLessonId}
-          onVideoComplete={handleVideoComplete}
+          concluidas={concluidas}
+          onConcluir={handleConcluir}
         />
       );
     }
@@ -131,11 +175,10 @@ export default function App() {
       case 'progress':
         return (
           <ProgressSection
-            userPoints={userProgress.points}
-            totalVideos={userProgress.totalVideos}
-            completedVideos={userProgress.completedVideos}
-            certificatesEarned={userProgress.certificatesEarned}
-            currentStreak={userProgress.currentStreak}
+            modules={modules}
+            lessons={lessons}
+            concluidas={concluidas}
+            carregado={progressoCarregado}
           />
         );
 
