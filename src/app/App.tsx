@@ -146,15 +146,14 @@ export default function App() {
     if (selectedLessonId) {
       const lesson = lessons.find((l) => l.id === selectedLessonId);
       const module = modules.find((m) => m.id === lesson.moduleId);
-      const moduleLessons = lessons.filter((l) => l.moduleId === lesson.moduleId);
 
       return (
         <VideoPlayer
           lesson={lesson}
           module={module}
-          moduleLessons={moduleLessons}
           onSelectLesson={setSelectedLessonId}
           concluidas={concluidas}
+          carregado={progressoCarregado}
           onConcluir={handleConcluir}
         />
       );

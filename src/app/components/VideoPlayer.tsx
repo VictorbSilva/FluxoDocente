@@ -1,33 +1,58 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Progress } from './ui/progress';
-import { Award, CheckCircle, Clock, Users } from 'lucide-react';
+import { Award, CheckCircle, ChevronDown, Clock, Users } from 'lucide-react';
+import { modules, lessons } from '../../../shared/catalog';
 import type { Lesson, Module } from '../../../shared/contracts';
 
 interface VideoPlayerProps {
   lesson: Lesson;
   module: Module;
-  moduleLessons: Lesson[];
   onSelectLesson: (id: string) => void;
   concluidas: ReadonlyMap<string, string>;
+  carregado: boolean;
   onConcluir: (lessonId: string) => Promise<void>;
 }
 
 export function VideoPlayer({
   lesson,
   module,
-  moduleLessons,
   onSelectLesson,
   concluidas,
+  carregado,
   onConcluir,
 }: VideoPlayerProps) {
   const [salvando, setSalvando] = useState(false);
+  const [abertos, setAbertos] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setSalvando(false);
+  }, [lesson.id]);
 
   const concluida = concluidas.has(lesson.id);
-  const feitas = moduleLessons.filter((l) => concluidas.has(l.id)).length;
-  const total = moduleLessons.length;
+
+  const ordemGlobal = modules.flatMap((m) =>
+    lessons.filter((l) => l.moduleId === m.id),
+  );
+  const indiceAtual = ordemGlobal.findIndex((l) => l.id === lesson.id);
+  const anterior = indiceAtual > 0 ? ordemGlobal[indiceAtual - 1] : undefined;
+  const proxima =
+    indiceAtual >= 0 && indiceAtual < ordemGlobal.length - 1
+      ? ordemGlobal[indiceAtual + 1]
+      : undefined;
+
+  const alternarModulo = (moduleId: string) => {
+    setAbertos((anteriores) => {
+      const novos = new Set(anteriores);
+      if (novos.has(moduleId)) {
+        novos.delete(moduleId);
+      } else {
+        novos.add(moduleId);
+      }
+      return novos;
+    });
+  };
 
   const marcarConcluida = async () => {
     setSalvando(true);
@@ -56,6 +81,25 @@ export function VideoPlayer({
               />
             </div>
           </Card>
+
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              className='flex-1'
+              onClick={() => onSelectLesson(anterior.id)}
+              disabled={!anterior}
+            >
+              Aula anterior
+            </Button>
+            <Button
+              variant='outline'
+              className='flex-1'
+              onClick={() => onSelectLesson(proxima.id)}
+              disabled={!proxima}
+            >
+              Próxima aula
+            </Button>
+          </div>
 
           {/* Video Info */}
           <Card className='p-6'>
@@ -106,15 +150,17 @@ export function VideoPlayer({
               <div className='pt-4 border-t border-gray-200'>
                 <Button
                   onClick={marcarConcluida}
-                  disabled={concluida || salvando}
+                  disabled={!carregado || concluida || salvando}
                   className='w-full bg-[#21a3a3] hover:bg-[#13c8b5]'
                 >
                   <Award className='h-4 w-4 mr-2' />
-                  {concluida
-                    ? 'Aula concluída'
-                    : salvando
-                      ? 'Salvando...'
-                      : 'Marcar como Concluído'}
+                  {!carregado
+                    ? 'Carregando...'
+                    : concluida
+                      ? 'Aula concluída'
+                      : salvando
+                        ? 'Salvando...'
+                        : 'Marcar como Concluído'}
                 </Button>
               </div>
             </div>
@@ -124,45 +170,94 @@ export function VideoPlayer({
         {/* Sidebar */}
         <div className='space-y-6'>
           <Card className='p-4'>
-            <h3 className='text-lg text-gray-900 mb-2'>Progresso do módulo</h3>
-            <p className='text-sm text-gray-600 mb-2'>
-              {feitas} de {total} aulas concluídas
-            </p>
-            <Progress value={total ? (feitas / total) * 100 : 0} />
-          </Card>
-
-          <Card className='p-4'>
-            <h3 className='text-lg text-gray-900 mb-4'>Aulas do módulo</h3>
+            <h3 className='text-lg text-gray-900 mb-4'>Conteúdo do curso</h3>
             <div className='space-y-3'>
-              {moduleLessons.map((l) => (
-                <button
-                  key={l.id}
-                  type='button'
-                  onClick={() => onSelectLesson(l.id)}
-                  aria-current={l.id === lesson.id ? 'true' : undefined}
-                  className={`w-full p-2 rounded-lg text-left ${
-                    l.id === lesson.id ? 'bg-[#e0faf6]' : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <span className='flex items-start gap-2'>
-                    <span className='flex-1 text-sm text-gray-900'>{l.title}</span>
-                    {concluidas.has(l.id) && (
-                      <>
-                        <CheckCircle
-                          className='h-4 w-4 shrink-0 text-[#177a7a]'
-                          aria-hidden='true'
-                        />
-                        <span className='sr-only'>concluída</span>
-                      </>
-                    )}
-                  </span>
-                  {l.duration && (
-                    <span className='block text-xs text-gray-500 mt-1'>
-                      {l.duration}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {modules.map((m) => {
+                const aulas = lessons.filter((l) => l.moduleId === m.id);
+                const feitas = aulas.filter((l) => concluidas.has(l.id)).length;
+                const aberto = abertos.has(m.id);
+                const listaId = 'aulas-' + m.id;
+                const visiveis = aberto
+                  ? aulas
+                  : aulas.filter((l) => l.id === lesson.id);
+
+                return (
+                  <div key={m.id}>
+                    <button
+                      type='button'
+                      onClick={() => alternarModulo(m.id)}
+                      disabled={aulas.length === 0}
+                      aria-expanded={aberto}
+                      aria-controls={listaId}
+                      className='w-full flex items-start gap-2 p-2 rounded-lg text-left hover:bg-gray-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+                    >
+                      <span className='flex-1'>
+                        <span className='block text-sm text-gray-900'>
+                          {m.title}
+                        </span>
+                        {aulas.length === 0 ? (
+                          <span className='block text-xs text-gray-500 mt-1'>
+                            Aulas em breve
+                          </span>
+                        ) : (
+                          carregado && (
+                            <span className='block text-xs text-[#177a7a] mt-1'>
+                              {feitas} de {aulas.length} concluídas
+                            </span>
+                          )
+                        )}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 shrink-0 mt-0.5 text-gray-500 transition-transform ${
+                          aberto ? 'rotate-180' : ''
+                        }`}
+                        aria-hidden='true'
+                      />
+                    </button>
+
+                    <ul
+                      id={listaId}
+                      hidden={visiveis.length === 0}
+                      className='mt-1 pl-3 space-y-1'
+                    >
+                      {visiveis.map((l) => (
+                        <li key={l.id}>
+                          <button
+                            type='button'
+                            onClick={() => onSelectLesson(l.id)}
+                            aria-current={l.id === lesson.id ? 'true' : undefined}
+                            className={`w-full p-2 rounded-lg text-left ${
+                              l.id === lesson.id
+                                ? 'bg-[#e0faf6]'
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <span className='flex items-start gap-2'>
+                              <span className='flex-1 text-sm text-gray-900'>
+                                {l.title}
+                              </span>
+                              {concluidas.has(l.id) && (
+                                <>
+                                  <CheckCircle
+                                    className='h-4 w-4 shrink-0 text-[#177a7a]'
+                                    aria-hidden='true'
+                                  />
+                                  <span className='sr-only'>concluída</span>
+                                </>
+                              )}
+                            </span>
+                            {l.duration && (
+                              <span className='block text-xs text-gray-500 mt-1'>
+                                {l.duration}
+                              </span>
+                            )}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
             </div>
           </Card>
         </div>
