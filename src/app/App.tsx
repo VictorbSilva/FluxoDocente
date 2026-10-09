@@ -206,14 +206,6 @@ export default function App() {
     }
   };
 
-  const handleApplyOpportunity = (opportunityId: string) => {
-    toast.success('🎯 Redirecionando para a oportunidade! Boa sorte!');
-  };
-
-  const handleViewAllStories = () => {
-    setCurrentSection('stories');
-  };
-
   const renderCurrentSection = () => {
     if (selectedLessonId) {
       const lesson = lessons.find((l) => l.id === selectedLessonId);
