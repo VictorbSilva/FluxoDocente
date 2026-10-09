@@ -8,7 +8,7 @@ export async function prepararBanco(): Promise<pg.Pool> {
 
   try {
     await aplicarMigracoes(pool);
-    await pool.query('TRUNCATE lesson_completions, users, session');
+    await pool.query('TRUNCATE lesson_notes, lesson_completions, users, session');
     return pool;
   } catch (erro) {
     await pool.end();

@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import path from 'node:path';
 import type pg from 'pg';
+import { criarRotasDeAnotacoes } from './anotacoes/rotas.js';
 import { criarRotasDeAuth } from './auth/rotas.js';
 import { criarExigirLogin, criarMiddlewareDeSessao } from './auth/sessao.js';
 import { criarRotasDeProgresso } from './progresso/rotas.js';
@@ -30,7 +31,7 @@ export function createApp(opcoes: {
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   }));
 
-  app.use('/api', express.json({ limit: '10kb' }));
+  app.use('/api', express.json({ limit: '32kb' }));
 
   // Além do SameSite=Lax, toda requisição que altera estado exige um cabeçalho
   // próprio, que um formulário de outro site não consegue enviar.
@@ -60,6 +61,7 @@ export function createApp(opcoes: {
     '/api/me',
     criarExigirLogin(opcoes.pool, opcoes.production),
     criarRotasDeProgresso(opcoes.pool, opcoes.lessonIds),
+    criarRotasDeAnotacoes(opcoes.pool, opcoes.lessonIds),
   );
 
   app.use('/api', (_req, res) => {
