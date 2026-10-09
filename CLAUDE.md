@@ -7,7 +7,7 @@ Orientação para o Claude Code neste repositório.
 **FluxoDocente**: site instrucional do TCC de Victor sobre letramento digital de docentes do ensino superior em ferramentas de IA. A base foi gerada no Figma Make (veja `src/app/Attributions.md`: componentes shadcn/ui e fotos do Unsplash).
 
 - Front-end em `src/`, ligado à API Node + Express + TypeScript em `server/`. O login é real, com sessão no Postgres, e o progresso por aula é salvo no banco para o usuário autenticado. Tipos e catálogo de módulos e aulas ficam em `shared/`.
-- `src/app/App.tsx` controla a interface, a autenticação e o progresso recebido da API. As telas e aulas têm endereços próprios: `/`, `/cursos`, `/progresso` e `/aula/<id da aula>`. Não há anotações nem materiais em PDF.
+- `src/app/App.tsx` controla a interface, a autenticação e o progresso recebido da API. As telas e aulas têm endereços próprios: `/`, `/cursos`, `/progresso` e `/aula/<id da aula>`. O player tem uma anotação por aula, salva pela API para o usuário autenticado. Não há materiais em PDF.
 - O Render serve o front compilado e a API `/api` na mesma origem. O deploy atual usa o plano gratuito, região Virginia; a troca para o plano pago está prevista antes da liberação aos docentes. O banco é Postgres no Neon (`aws-us-east-1`), com branches `main`, `dev` e `test`.
 
 ## Stack
