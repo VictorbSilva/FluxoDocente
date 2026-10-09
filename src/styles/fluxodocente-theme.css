@@ -8,7 +8,7 @@
 
   --background: #ffffff;
   --foreground: #2b364a;
-  --primary: #21a3a3;
+  --primary: #177a7a;
   --primary-foreground: #ffffff;
   --secondary: #f0fafa;
   --secondary-foreground: #2b364a;
@@ -17,5 +17,5 @@
   --accent: #e0faf6;
   --accent-foreground: #2b364a;
   --border: rgba(33,163,163,0.15);
-  --ring: #13c8b5;
+  --ring: #177a7a;
 }

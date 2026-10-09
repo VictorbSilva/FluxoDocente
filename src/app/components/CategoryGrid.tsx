@@ -12,7 +12,7 @@ export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Iniciante':
-        return 'bg-[#e0faf6] text-[#21a3a3]';
+        return 'bg-[#e0faf6] text-[#177a7a]';
       case 'Intermediário':
         return 'bg-yellow-100 text-yellow-700';
       case 'Avançado':
@@ -52,7 +52,7 @@ export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
                     <div className='flex items-center gap-3'>
                       <div className='text-3xl'>{module.icon}</div>
                       <div>
-                        <h3 className='text-lg text-gray-900 group-hover:text-[#21a3a3] transition-colors'>
+                        <h3 className='text-lg text-gray-900 group-hover:text-[#177a7a] transition-colors'>
                           {module.title}
                         </h3>
                         <Badge
@@ -93,7 +93,7 @@ export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
                   <Button
                     onClick={() => onCategorySelect(module.id)}
                     disabled={total === 0}
-                    className='w-full mt-4 bg-gradient-to-r bg-[#21a3a3] hover:bg-[#13c8b5]'
+                    className='w-full mt-4 bg-gradient-to-r bg-[#177a7a] hover:bg-[#136d6d]'
                   >
                     <Play className='h-4 w-4 mr-2' />
                     {total === 0 ? 'Aulas em breve' : 'Começar Curso'}

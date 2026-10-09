@@ -28,7 +28,7 @@ export function HeroSection({ onGetStarted }: HeroSectionProps) {
               <Button
                 onClick={onGetStarted}
                 size='lg'
-                className='bg-gradient-to-r bg-[#21a3a3] hover:bg-[#13c8b5] text-white shadow-lg'
+                className='bg-gradient-to-r bg-[#177a7a] hover:bg-[#136d6d] text-white shadow-lg'
               >
                 <Play className='h-5 w-5 mr-2' />
                 Começar Agora

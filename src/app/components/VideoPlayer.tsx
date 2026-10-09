@@ -151,7 +151,7 @@ export function VideoPlayer({
                 <Button
                   onClick={marcarConcluida}
                   disabled={!carregado || concluida || salvando}
-                  className='w-full bg-[#21a3a3] hover:bg-[#13c8b5]'
+                  className='w-full bg-[#177a7a] hover:bg-[#136d6d]'
                 >
                   <Award className='h-4 w-4 mr-2' />
                   {!carregado

@@ -70,7 +70,7 @@ export function LoginSection({ onLogin }: LoginSectionProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder='docente@instituicao.edu.br'
-                  className='pl-10 border-gray-200 focus:border-[#21a3a3] focus:ring-[#21a3a3] h-10'
+                  className='pl-10 border-gray-200 focus:border-[#177a7a] focus:ring-[#177a7a] h-10'
                   required
                 />
               </div>
@@ -98,7 +98,7 @@ export function LoginSection({ onLogin }: LoginSectionProps) {
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder='••••••••'
-                  className='pl-10 border-gray-200 focus:border-[#21a3a3] focus:ring-[#21a3a3] h-10'
+                  className='pl-10 border-gray-200 focus:border-[#177a7a] focus:ring-[#177a7a] h-10'
                   required
                 />
               </div>
@@ -116,7 +116,7 @@ export function LoginSection({ onLogin }: LoginSectionProps) {
               disabled={enviando}
               className='w-full text-white shadow-lg hover:opacity-90 transition-opacity h-11 text-base mt-2'
               style={{
-                background: 'linear-gradient(to right, #2b364a, #21a3a3)',
+                background: 'linear-gradient(to right, #2b364a, #177a7a)',
               }}
             >
               {enviando ? 'Entrando...' : 'Fazer Login'}
