@@ -17,6 +17,7 @@ import {
   sair,
   sessaoAtual,
 } from './lib/api';
+import { caminhoDe, lerRota } from './lib/rotas';
 
 type Sessao =
   | { estado: 'carregando' }
@@ -26,8 +27,12 @@ type Sessao =
 
 export default function App() {
   const [sessao, setSessao] = useState<Sessao>({ estado: 'carregando' });
-  const [currentSection, setCurrentSection] = useState('home');
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [currentSection, setCurrentSection] = useState<string>(
+    () => lerRota(window.location.pathname).section,
+  );
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(
+    () => lerRota(window.location.pathname).lessonId,
+  );
   const [concluidas, setConcluidas] = useState<Map<string, string>>(
     () => new Map(),
   );
@@ -49,6 +54,33 @@ export default function App() {
   useEffect(() => {
     consultarSessao();
   }, []);
+
+  // O endereço acompanha a tela: corrige um caminho inválido na abertura e
+  // aplica o Voltar/Avançar do navegador sem empilhar outra entrada.
+  useEffect(() => {
+    const inicial = lerRota(window.location.pathname);
+    const canonico = caminhoDe(inicial.section, inicial.lessonId);
+    if (window.location.pathname !== canonico) {
+      history.replaceState(null, '', canonico);
+    }
+
+    const aoNavegar = () => {
+      const rota = lerRota(window.location.pathname);
+      setCurrentSection(rota.section);
+      setSelectedLessonId(rota.lessonId);
+    };
+    window.addEventListener('popstate', aoNavegar);
+    return () => window.removeEventListener('popstate', aoNavegar);
+  }, []);
+
+  const irPara = (section: string, lessonId: string | null) => {
+    setCurrentSection(section);
+    setSelectedLessonId(lessonId);
+    const caminho = caminhoDe(section, lessonId);
+    if (caminho !== window.location.pathname) {
+      history.pushState(null, '', caminho);
+    }
+  };
 
   const tratarErro = (err) => {
     if (err instanceof ApiError && err.status === 401) {
@@ -100,17 +132,17 @@ export default function App() {
     }
     setSessao({ estado: 'anonima' });
     setConcluidas(new Map());
+    history.replaceState(null, '', '/');
     setCurrentSection('home');
     setSelectedLessonId(null);
   };
 
   const handleSectionChange = (section: string) => {
-    setCurrentSection(section);
-    setSelectedLessonId(null);
+    irPara(section, null);
   };
 
   const handleGetStarted = () => {
-    setCurrentSection('courses');
+    irPara('courses', null);
     toast.success('Vamos começar sua jornada de transformação! 🚀');
   };
 
@@ -120,7 +152,7 @@ export default function App() {
       toast.info('Este módulo ainda não tem aulas publicadas.');
       return;
     }
-    setSelectedLessonId(lesson.id);
+    irPara(currentSection, lesson.id);
   };
 
   const handleConcluir = async (lessonId: string): Promise<void> => {
@@ -151,7 +183,7 @@ export default function App() {
         <VideoPlayer
           lesson={lesson}
           module={module}
-          onSelectLesson={setSelectedLessonId}
+          onSelectLesson={(id) => irPara(currentSection, id)}
           concluidas={concluidas}
           carregado={progressoCarregado}
           onConcluir={handleConcluir}
