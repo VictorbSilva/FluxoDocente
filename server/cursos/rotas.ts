@@ -1,13 +1,12 @@
 import express from 'express';
 import type pg from 'pg';
-import { courseIds } from '../../shared/catalog.js';
-import type { MatriculaDTO, UserDTO } from '../../shared/contracts.js';
+import type { Catalogo, MatriculaDTO, UserDTO } from '../../shared/contracts.js';
 
 const LIMITE_DO_NOME = 120;
 
 // Montado depois de exigirLogin. O dono da matrícula e do perfil é sempre
 // req.session.userId: nenhum userId do corpo, da query ou do caminho é lido.
-export function criarRotasDeCursos(pool: pg.Pool): express.Router {
+export function criarRotasDeCursos(pool: pg.Pool, catalogo: Catalogo): express.Router {
   const router = express.Router();
 
   router.get('/matriculas', async (req, res) => {
@@ -27,7 +26,7 @@ export function criarRotasDeCursos(pool: pg.Pool): express.Router {
   router.post('/matriculas/:courseId', async (req, res) => {
     const { courseId } = req.params;
 
-    if (!courseIds.has(courseId)) {
+    if (!catalogo.courses.some((curso) => curso.id === courseId)) {
       res.status(404).json({
         error: { code: 'curso_inexistente', message: 'Curso não encontrado.' },
       });

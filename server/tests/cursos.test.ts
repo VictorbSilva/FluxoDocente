@@ -8,10 +8,10 @@ import type pg from 'pg';
 import { createApp } from '../app.js';
 import { hashSenha } from '../auth/senha.js';
 import { prepararBanco } from './ajuda.js';
+import { catalogoDeTeste } from './catalogo-de-teste.js';
 import { entrar, novoCliente } from './http.js';
 
 const SENHA = 'senha-correta-123';
-const lessonIds: ReadonlySet<string> = new Set(['aula-teste-1']);
 
 let pool: pg.Pool;
 let servidor: Server;
@@ -47,7 +47,7 @@ before(async () => {
   idDeA = await criarUsuario('a@exemplo.com');
   idDeB = await criarUsuario('b@exemplo.com');
 
-  servidor = createApp({ production: false, pool, sessionSecret: 'x'.repeat(40), lessonIds }).listen(0);
+  servidor = createApp({ production: false, pool, sessionSecret: 'x'.repeat(40), catalogo: catalogoDeTeste }).listen(0);
   await once(servidor, 'listening');
   baseUrl = `http://localhost:${(servidor.address() as AddressInfo).port}`;
 
@@ -69,7 +69,7 @@ after(async () => {
 test('sem cookie, matrículas e perfil devolvem 401', async () => {
   const cliente = novoCliente(baseUrl);
   const get = await cliente.enviar('GET', '/api/me/matriculas');
-  const post = await cliente.enviar('POST', '/api/me/matriculas/ia-docencia');
+  const post = await cliente.enviar('POST', '/api/me/matriculas/curso-teste');
   const put = await cliente.enviar('PUT', '/api/me/perfil', { corpo: { nome: 'Ana Souza' } });
 
   for (const resposta of [get, post, put]) {
@@ -88,15 +88,15 @@ test('matrícula: lista vazia, matricula, repete sem mudar a data e lista a matr
   assert.equal(vazia.status, 200);
   assert.deepEqual(vazia.corpo, { matriculas: [] });
 
-  const primeira = await cliente.enviar('POST', '/api/me/matriculas/ia-docencia', { cookie: cookieDeA });
+  const primeira = await cliente.enviar('POST', '/api/me/matriculas/curso-teste', { cookie: cookieDeA });
 
   assert.equal(primeira.status, 200);
   assert.deepEqual(Object.keys(primeira.corpo).sort(), ['courseId', 'enrolledAt']);
-  assert.equal(primeira.corpo.courseId, 'ia-docencia');
+  assert.equal(primeira.corpo.courseId, 'curso-teste');
   assert.equal(new Date(primeira.corpo.enrolledAt).toISOString(), primeira.corpo.enrolledAt);
 
   await esperar(10);
-  const repetida = await cliente.enviar('POST', '/api/me/matriculas/ia-docencia', { cookie: cookieDeA });
+  const repetida = await cliente.enviar('POST', '/api/me/matriculas/curso-teste', { cookie: cookieDeA });
 
   assert.equal(repetida.status, 200);
   assert.deepEqual(repetida.corpo, primeira.corpo);
@@ -105,12 +105,12 @@ test('matrícula: lista vazia, matricula, repete sem mudar a data e lista a matr
 
   assert.equal(lista.status, 200);
   assert.deepEqual(lista.corpo, { matriculas: [primeira.corpo] });
-  assert.deepEqual(await matriculasDe(idDeA), ['ia-docencia']);
+  assert.deepEqual(await matriculasDe(idDeA), ['curso-teste']);
 });
 
 test('matrícula é do dono da sessão: B não vê a de A', async () => {
   const cliente = novoCliente(baseUrl);
-  await cliente.enviar('POST', '/api/me/matriculas/ia-docencia', { cookie: cookieDeA });
+  await cliente.enviar('POST', '/api/me/matriculas/curso-teste', { cookie: cookieDeA });
 
   const deB = await cliente.enviar('GET', '/api/me/matriculas', { cookie: cookieDeB });
 
@@ -132,7 +132,7 @@ test('matrícula em curso inexistente devolve 404 curso_inexistente', async () =
 
 test('POST de matrícula sem o cabeçalho X-FluxoDocente é recusado', async () => {
   const cliente = novoCliente(baseUrl);
-  const resposta = await cliente.enviar('POST', '/api/me/matriculas/ia-docencia', {
+  const resposta = await cliente.enviar('POST', '/api/me/matriculas/curso-teste', {
     cookie: cookieDeA,
     semCabecalho: true,
   });

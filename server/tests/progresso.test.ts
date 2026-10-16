@@ -7,10 +7,10 @@ import type pg from 'pg';
 import { createApp } from '../app.js';
 import { hashSenha } from '../auth/senha.js';
 import { prepararBanco } from './ajuda.js';
+import { catalogoDeTeste, matricular } from './catalogo-de-teste.js';
 import { entrar, novoCliente } from './http.js';
 
 const SENHA = 'senha-correta-123';
-const lessonIds: ReadonlySet<string> = new Set(['aula-teste-1', 'aula-teste-2']);
 
 let pool: pg.Pool;
 let servidor: Server;
@@ -40,8 +40,10 @@ before(async () => {
   pool = await prepararBanco();
   idDeA = await criarUsuario('a@exemplo.com');
   idDeB = await criarUsuario('b@exemplo.com');
+  await matricular(pool, idDeA);
+  await matricular(pool, idDeB);
 
-  servidor = createApp({ production: false, pool, sessionSecret: 'x'.repeat(40), lessonIds }).listen(0);
+  servidor = createApp({ production: false, pool, sessionSecret: 'x'.repeat(40), catalogo: catalogoDeTeste }).listen(0);
   await once(servidor, 'listening');
   baseUrl = `http://localhost:${(servidor.address() as AddressInfo).port}`;
 

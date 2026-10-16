@@ -56,3 +56,23 @@ export interface Lesson {
   durationSeconds?: number;
   tags?: string[];
 }
+
+export interface PerguntaDTO {
+  id: string;
+  enunciado: string;
+  alternativas: string[];
+}
+
+// Sem gabarito: ele nunca fica em shared/.
+export interface Exercicio {
+  moduleId: string;
+  perguntas: PerguntaDTO[];
+}
+
+export interface Catalogo {
+  courses: Course[];
+  modules: Module[];
+  lessons: Lesson[];
+  exercicios: Exercicio[];
+  nivelamento: PerguntaDTO[];
+}

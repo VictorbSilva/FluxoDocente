@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { courses, modules, lessons } from '../../shared/catalog.js';
+import { catalogo, courses, modules, lessons } from '../../shared/catalog.js';
 import { formatarDuracao } from '../../shared/duracao.js';
 
 test('IDs de módulo são únicos', () => {
@@ -84,6 +84,40 @@ test('vídeo de encerramento do curso, quando existe, tem o formato de ID do You
   for (const curso of courses) {
     if (curso.closingYoutubeId !== undefined) {
       assert.match(curso.closingYoutubeId, /^[A-Za-z0-9_-]{11}$/);
+    }
+  }
+});
+
+test('todo exercício aponta para um módulo existente', () => {
+  const moduleIds = new Set(modules.map((modulo) => modulo.id));
+
+  for (const exercicio of catalogo.exercicios) {
+    assert.ok(moduleIds.has(exercicio.moduleId), exercicio.moduleId);
+  }
+});
+
+test('cada módulo tem no máximo um exercício', () => {
+  const moduleIds = catalogo.exercicios.map((exercicio) => exercicio.moduleId);
+  assert.equal(new Set(moduleIds).size, moduleIds.length);
+});
+
+test('IDs de pergunta são únicos em cada exercício e no nivelamento', () => {
+  const grupos = [...catalogo.exercicios.map((exercicio) => exercicio.perguntas), catalogo.nivelamento];
+
+  for (const perguntas of grupos) {
+    assert.equal(new Set(perguntas.map((pergunta) => pergunta.id)).size, perguntas.length);
+  }
+});
+
+test('toda pergunta tem enunciado e ao menos 2 alternativas, nenhum deles vazio', () => {
+  const perguntas = [...catalogo.exercicios.flatMap((exercicio) => exercicio.perguntas), ...catalogo.nivelamento];
+
+  for (const pergunta of perguntas) {
+    assert.ok(pergunta.enunciado.trim().length > 0, pergunta.id);
+    assert.ok(pergunta.alternativas.length >= 2, pergunta.id);
+
+    for (const alternativa of pergunta.alternativas) {
+      assert.ok(alternativa.trim().length > 0, pergunta.id);
     }
   }
 });

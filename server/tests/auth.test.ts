@@ -7,6 +7,7 @@ import type pg from 'pg';
 import { createApp } from '../app.js';
 import { hashSenha } from '../auth/senha.js';
 import { prepararBanco } from './ajuda.js';
+import { catalogoDeTeste } from './catalogo-de-teste.js';
 import { novoCliente } from './http.js';
 
 const SENHA = 'senha-correta-123';
@@ -15,7 +16,7 @@ let pool: pg.Pool;
 const servidores: Server[] = [];
 
 async function subirApp(): Promise<string> {
-  const servidor = createApp({ production: false, pool, sessionSecret: 'x'.repeat(40), lessonIds: new Set() }).listen(0);
+  const servidor = createApp({ production: false, pool, sessionSecret: 'x'.repeat(40), catalogo: catalogoDeTeste }).listen(0);
   servidores.push(servidor);
   await once(servidor, 'listening');
   return `http://localhost:${(servidor.address() as AddressInfo).port}`;
