@@ -1,6 +1,7 @@
 import type {
   ApiErrorBody,
   CompletionDTO,
+  MatriculaDTO,
   NoteDTO,
   ProgressDTO,
   UserDTO,
@@ -90,6 +91,26 @@ export function sair(): Promise<void> {
 
 export function progresso(): Promise<ProgressDTO> {
   return requisitar<ProgressDTO>('/me/progress');
+}
+
+export async function matriculas(): Promise<MatriculaDTO[]> {
+  const { matriculas } = await requisitar<{ matriculas: MatriculaDTO[] }>('/me/matriculas');
+  return matriculas;
+}
+
+export function matricular(courseId: string): Promise<MatriculaDTO> {
+  return requisitar<MatriculaDTO>(
+    '/me/matriculas/' + encodeURIComponent(courseId),
+    { method: 'POST' },
+  );
+}
+
+export async function salvarPerfil(nome: string): Promise<UserDTO> {
+  const { user } = await requisitar<{ user: UserDTO }>('/me/perfil', {
+    method: 'PUT',
+    body: { nome },
+  });
+  return user;
 }
 
 export function concluirAula(lessonId: string): Promise<CompletionDTO> {

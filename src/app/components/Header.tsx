@@ -4,20 +4,22 @@ import { LogOut, BookOpen } from 'lucide-react';
 interface HeaderProps {
   currentSection: string;
   onSectionChange: (section: string) => void;
-  userEmail: string;
+  userLabel: string;
   onLogout: () => void;
 }
 
 export function Header({
   currentSection,
   onSectionChange,
-  userEmail,
+  userLabel,
   onLogout,
 }: HeaderProps) {
   const navItems = [
     { id: 'home', label: 'Início' },
-    { id: 'courses', label: 'Cursos' },
-    { id: 'progress', label: 'Progresso' },
+    { id: 'meus-cursos', label: 'Meus cursos' },
+    { id: 'nossos-cursos', label: 'Nossos cursos' },
+    { id: 'certificados', label: 'Meus certificados' },
+    { id: 'sobre', label: 'Sobre nós' },
   ];
 
   return (
@@ -39,7 +41,7 @@ export function Header({
           </div>
 
           {/* Navigation - Desktop */}
-          <nav className='hidden md:flex items-center gap-6'>
+          <nav className='hidden lg:flex items-center gap-6'>
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -58,7 +60,7 @@ export function Header({
           {/* User Info */}
           <div className='flex items-center gap-3'>
             <span className='hidden sm:inline text-sm text-white/80'>
-              {userEmail}
+              {userLabel}
             </span>
             <Button
               variant='ghost'
@@ -73,7 +75,7 @@ export function Header({
         </div>
 
         {/* Mobile Navigation */}
-        <nav className='md:hidden mt-3 flex gap-2 overflow-x-auto pb-2'>
+        <nav className='lg:hidden mt-3 flex gap-2 overflow-x-auto pb-2'>
           {navItems.map((item) => (
             <button
               key={item.id}

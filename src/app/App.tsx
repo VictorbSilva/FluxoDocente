@@ -7,20 +7,26 @@ import { HeroSection } from './components/HeroSection';
 import { LoginSection } from './components/LoginSection';
 import { CategoryGrid } from './components/CategoryGrid';
 import { PERGUNTA_SAIR_SEM_SALVAR, VideoPlayer } from './components/VideoPlayer';
-import { ProgressSection } from './components/ProgressSection';
+import { Painel } from './components/Painel';
+import { MeusCursos } from './components/MeusCursos';
+import { NossosCursos } from './components/NossosCursos';
+import { MeusCertificados } from './components/MeusCertificados';
 import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
 import { modules, lessons } from '../../shared/catalog';
-import type { UserDTO } from '../../shared/contracts';
+import type { MatriculaDTO, UserDTO } from '../../shared/contracts';
 import {
   ApiError,
   concluirAula,
   entrar,
+  matriculas as consultarMatriculas,
+  matricular,
   progresso,
   sair,
+  salvarPerfil,
   sessaoAtual,
 } from './lib/api';
-import { caminhoDe, lerRota } from './lib/rotas';
+import { caminhoDe, lerRota, SECOES_PRIVADAS } from './lib/rotas';
 
 type Sessao =
   | { estado: 'carregando' }
@@ -40,6 +46,8 @@ export default function App() {
     () => new Map(),
   );
   const [progressoCarregado, setProgressoCarregado] = useState(false);
+  const [matriculas, setMatriculas] = useState<MatriculaDTO[]>([]);
+  const [matriculasCarregadas, setMatriculasCarregadas] = useState(false);
   // Anotação com alterações não salvas no player, informada pelo VideoPlayer.
   const pendenteRef = useRef(false);
   // Tela e aula exibidas agora, lidas pelo listener de popstate.
@@ -125,6 +133,8 @@ export default function App() {
       pendenteRef.current = false;
       setSessao({ estado: 'anonima' });
       setConcluidas(new Map());
+      setMatriculas([]);
+      setMatriculasCarregadas(false);
       toast.info('Sua sessão expirou. Entre novamente.');
     } else {
       toast.error(err.message);
@@ -146,6 +156,28 @@ export default function App() {
           new Map(completions.map((c) => [c.lessonId, c.completedAt])),
         );
         setProgressoCarregado(true);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        tratarErro(err);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [usuarioId]);
+
+  useEffect(() => {
+    setMatriculas([]);
+    setMatriculasCarregadas(false);
+    if (!usuarioId) return;
+
+    let cancelado = false;
+    consultarMatriculas()
+      .then((matriculas) => {
+        if (cancelado) return;
+        setMatriculas(matriculas);
+        setMatriculasCarregadas(true);
       })
       .catch((err) => {
         if (cancelado) return;
@@ -186,6 +218,8 @@ export default function App() {
     pendenteRef.current = false;
     setSessao({ estado: 'anonima' });
     setConcluidas(new Map());
+    setMatriculas([]);
+    setMatriculasCarregadas(false);
     history.replaceState(null, '', '/');
     setCurrentSection('home');
     setSelectedLessonId(null);
@@ -195,9 +229,25 @@ export default function App() {
     irPara(section, null);
   };
 
-  const handleGetStarted = () => {
-    irPara('courses', null);
-    toast.success('Vamos começar sua jornada de transformação!');
+  const handleMatricular = async (courseId: string): Promise<void> => {
+    try {
+      const matricula = await matricular(courseId);
+      setMatriculas((anteriores) => [...anteriores, matricula]);
+      toast.success('Matrícula feita. O curso está em Meus cursos.');
+      irPara('meus-cursos', null);
+    } catch (err) {
+      tratarErro(err);
+    }
+  };
+
+  const handleSalvarNome = async (nome: string): Promise<void> => {
+    try {
+      const usuario = await salvarPerfil(nome);
+      setSessao({ estado: 'autenticada', usuario });
+      toast.success('Nome salvo.');
+    } catch (err) {
+      tratarErro(err);
+    }
   };
 
   const handleCategorySelect = (moduleId: string) => {
@@ -221,6 +271,8 @@ export default function App() {
   };
 
   const renderCurrentSection = () => {
+    if (sessao.estado !== 'autenticada') return null;
+
     if (selectedLessonId) {
       const lesson = lessons.find((l) => l.id === selectedLessonId);
       const module = modules.find((m) => m.id === lesson.moduleId);
@@ -242,33 +294,42 @@ export default function App() {
     }
 
     switch (currentSection) {
-      case 'home':
+      case 'meus-cursos':
         return (
-          <div>
-            <HeroSection onGetStarted={handleGetStarted} />
-            <CategoryGrid onCategorySelect={handleCategorySelect} />
-          </div>
-        );
-
-      case 'courses':
-        return <CategoryGrid onCategorySelect={handleCategorySelect} />;
-
-      case 'progress':
-        return (
-          <ProgressSection
-            modules={modules}
-            lessons={lessons}
+          <MeusCursos
+            matriculas={matriculas}
+            carregado={matriculasCarregadas && progressoCarregado}
             concluidas={concluidas}
-            carregado={progressoCarregado}
+            onCategorySelect={handleCategorySelect}
+            onVerNossosCursos={() => irPara('nossos-cursos', null)}
           />
         );
 
+      case 'nossos-cursos':
+        return (
+          <NossosCursos
+            matriculas={matriculas}
+            carregado={matriculasCarregadas}
+            onMatricular={handleMatricular}
+            onIrParaMeusCursos={() => irPara('meus-cursos', null)}
+          />
+        );
+
+      case 'certificados':
+        return <MeusCertificados />;
+
+      case 'sobre':
+        return <SobreNos />;
+
+      case 'home':
       default:
         return (
-          <div>
-            <HeroSection onGetStarted={handleGetStarted} />
-            <CategoryGrid onCategorySelect={handleCategorySelect} />
-          </div>
+          <Painel
+            usuario={sessao.usuario}
+            concluidas={concluidas}
+            carregado={progressoCarregado}
+            onSalvarNome={handleSalvarNome}
+          />
         );
     }
   };
@@ -309,7 +370,11 @@ export default function App() {
   }
 
   if (sessao.estado === 'anonima') {
-    if (currentSection === 'entrar' || selectedLessonId !== null) {
+    if (
+      currentSection === 'entrar' ||
+      SECOES_PRIVADAS.has(currentSection) ||
+      selectedLessonId !== null
+    ) {
       return (
         <>
           <LoginSection onLogin={handleLogin} />
@@ -340,7 +405,7 @@ export default function App() {
       <Header
         currentSection={currentSection}
         onSectionChange={handleSectionChange}
-        userEmail={sessao.usuario.email}
+        userLabel={sessao.usuario.nome ?? sessao.usuario.email}
         onLogout={handleLogout}
       />
 
