@@ -67,8 +67,8 @@ export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Ro
       return;
     }
 
-    const { rows } = await pool.query<{ id: string; email: string; password_hash: string }>(
-      'SELECT id, email, password_hash FROM users WHERE email = $1',
+    const { rows } = await pool.query<{ id: string; email: string; nome: string | null; password_hash: string }>(
+      'SELECT id, email, nome, password_hash FROM users WHERE email = $1',
       [email.trim().toLowerCase()],
     );
     const usuario = rows[0];
@@ -90,13 +90,13 @@ export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Ro
     req.session.senhaImpressao = impressaoDaSenha(usuario.password_hash);
     await salvarSessao(req);
 
-    const user: UserDTO = { id: usuario.id, email: usuario.email };
+    const user: UserDTO = { id: usuario.id, email: usuario.email, nome: usuario.nome };
     res.status(200).json({ user });
   });
 
   router.get('/me', exigirLogin, async (req, res) => {
     const { rows } = await pool.query<UserDTO>(
-      'SELECT id, email FROM users WHERE id = $1',
+      'SELECT id, email, nome FROM users WHERE id = $1',
       [req.session.userId],
     );
     const usuario = rows[0];
@@ -107,7 +107,7 @@ export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Ro
       return;
     }
 
-    const user: UserDTO = { id: usuario.id, email: usuario.email };
+    const user: UserDTO = { id: usuario.id, email: usuario.email, nome: usuario.nome };
     res.status(200).json({ user });
   });
 
