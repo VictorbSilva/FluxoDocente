@@ -22,15 +22,11 @@ export interface ApiErrorBody {
   error: { code: string; message: string };
 }
 
-export type Difficulty = 'Iniciante' | 'Intermediário' | 'Avançado';
-
 export interface Module {
   id: string;
   title: string;
   description: string;
-  icon: string;
   duration: string;
-  difficulty: Difficulty;
   color: string;
   tags: string[];
 }
