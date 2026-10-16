@@ -7,7 +7,7 @@ Orientação para o Codex neste repositório.
 **FluxoDocente**: site instrucional do TCC de Victor sobre letramento digital de docentes do ensino superior em ferramentas de IA. A base foi gerada no Figma Make (veja `src/app/Attributions.md`: componentes shadcn/ui e fotos do Unsplash).
 
 - Front-end em `src/`, ligado à API Node + Express + TypeScript em `server/`. O login é real, com sessão no Postgres, e o progresso por aula é salvo no banco para o usuário autenticado. Tipos e catálogo de módulos e aulas ficam em `shared/`.
-- `src/app/App.tsx` controla a interface, a autenticação e o progresso recebido da API. As telas e aulas têm endereços próprios: `/`, `/cursos`, `/progresso` e `/aula/<id da aula>`. O player tem uma anotação por aula, salva pela API para o usuário autenticado. Não há materiais em PDF.
+- `src/app/App.tsx` controla a interface, a autenticação e o progresso recebido da API. Quem não está logado vê a página de apresentação em `/` e entra por `/entrar`. As telas e aulas têm endereços próprios: `/`, `/entrar`, `/cursos`, `/progresso` e `/aula/<id da aula>`. O player tem uma anotação por aula, salva pela API para o usuário autenticado. Não há materiais em PDF.
 - O Render serve o front compilado e a API `/api` na mesma origem. O deploy atual usa o plano gratuito, região Virginia; a troca para o plano pago está prevista antes da liberação aos docentes. O banco é Postgres no Neon (`aws-us-east-1`), com branches `main`, `dev` e `test`.
 
 ## Stack
@@ -32,7 +32,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `server/usuarios.ts`: criação e listagem de contas, geração de senha e reset com revogação das sessões.
 - `server/scripts/`: comandos de migração e administração de contas.
 - `server/tests/`: testes do servidor e do catálogo; usam `TEST_DATABASE_URL` e apagam os dados desse banco.
-- `src/app/components/*.tsx`: as seções do site (`Header`, `HeroSection`, `LoginSection`, `CategoryGrid`, `VideoPlayer`, `ProgressSection`).
+- `src/app/components/*.tsx`: as seções do site (`Header`, `CabecalhoPublico`, `HeroSection`, `LoginSection`, `CategoryGrid`, `VideoPlayer`, `ProgressSection`, `Rodape`, `SobreNos`).
 - `src/app/components/ui/`: componentes shadcn/ui gerados em lote. Vários importam pacotes que não estão instalados, por isso a checagem de tipos acusa erros **só nessa pasta**. O build passa porque o Vite só empacota o que é importado. Não corrija esses erros como efeito colateral de outra tarefa; se um desses componentes passar a ser usado, instale o pacote dele.
 - `src/styles/fluxodocente-theme.css`: paleta do projeto (variáveis `--fd-*` e os tokens de tema).
 - `guidelines/Guidelines.md` é o modelo vazio do Figma Make: não contém regras.
