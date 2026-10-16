@@ -1,6 +1,6 @@
 import { lessonIds } from '../../../shared/catalog';
 
-export type Secao = 'home' | 'courses' | 'progress';
+export type Secao = 'home' | 'courses' | 'progress' | 'entrar';
 
 export interface Rota {
   section: Secao;
@@ -12,6 +12,7 @@ const PREFIXO_AULA = '/aula/';
 // Caminho desconhecido ou aula fora do catálogo cai no início. O endereço da
 // aula não guarda a seção de origem, então ela também abre com a seção inicial.
 export function lerRota(pathname: string): Rota {
+  if (pathname === '/entrar') return { section: 'entrar', lessonId: null };
   if (pathname === '/cursos') return { section: 'courses', lessonId: null };
   if (pathname === '/progresso') return { section: 'progress', lessonId: null };
 
@@ -30,6 +31,7 @@ export function lerRota(pathname: string): Rota {
 
 export function caminhoDe(section: string, lessonId: string | null): string {
   if (lessonId) return PREFIXO_AULA + encodeURIComponent(lessonId);
+  if (section === 'entrar') return '/entrar';
   if (section === 'courses') return '/cursos';
   if (section === 'progress') return '/progresso';
   return '/';
