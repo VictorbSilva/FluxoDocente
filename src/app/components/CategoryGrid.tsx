@@ -3,6 +3,7 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Play, Clock } from 'lucide-react';
 import { modules, lessons } from '../../../shared/catalog';
+import { duracaoDoModuloEmSegundos, formatarDuracao } from '../../../shared/duracao';
 
 interface CategoryGridProps {
   onCategorySelect: (categoryId: string) => void;
@@ -24,6 +25,7 @@ export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
         <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
           {modules.map((module) => {
             const total = lessons.filter((l) => l.moduleId === module.id).length;
+            const duracao = formatarDuracao(duracaoDoModuloEmSegundos(module.id));
 
             return (
               <Card
@@ -50,10 +52,12 @@ export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
                       <Play className='h-3 w-3' />
                       {total} {total === 1 ? 'aula' : 'aulas'}
                     </div>
-                    <div className='flex items-center gap-1'>
-                      <Clock className='h-3 w-3' />
-                      {module.duration}
-                    </div>
+                    {duracao && (
+                      <div className='flex items-center gap-1'>
+                        <Clock className='h-3 w-3' />
+                        {duracao}
+                      </div>
+                    )}
                   </div>
 
                   <div className='flex flex-wrap gap-1'>

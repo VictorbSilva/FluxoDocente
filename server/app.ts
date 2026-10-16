@@ -5,6 +5,7 @@ import type pg from 'pg';
 import { criarRotasDeAnotacoes } from './anotacoes/rotas.js';
 import { criarRotasDeAuth } from './auth/rotas.js';
 import { criarExigirLogin, criarMiddlewareDeSessao } from './auth/sessao.js';
+import { criarRotasDeCursos } from './cursos/rotas.js';
 import { criarRotasDeProgresso } from './progresso/rotas.js';
 
 const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -62,6 +63,7 @@ export function createApp(opcoes: {
     criarExigirLogin(opcoes.pool, opcoes.production),
     criarRotasDeProgresso(opcoes.pool, opcoes.lessonIds),
     criarRotasDeAnotacoes(opcoes.pool, opcoes.lessonIds),
+    criarRotasDeCursos(opcoes.pool),
   );
 
   app.use('/api', (_req, res) => {

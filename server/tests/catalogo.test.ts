@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modules, lessons } from '../../shared/catalog.js';
+import { courses, modules, lessons } from '../../shared/catalog.js';
+import { formatarDuracao } from '../../shared/duracao.js';
 
 test('IDs de módulo são únicos', () => {
   assert.equal(new Set(modules.map((modulo) => modulo.id)).size, modules.length);
@@ -40,4 +41,56 @@ test('títulos das aulas não são vazios', () => {
   for (const aula of lessons) {
     assert.ok(aula.title.trim().length > 0);
   }
+});
+
+test('IDs de curso são únicos', () => {
+  assert.equal(new Set(courses.map((curso) => curso.id)).size, courses.length);
+});
+
+test('todo módulo citado por um curso existe', () => {
+  const moduleIds = new Set(modules.map((modulo) => modulo.id));
+
+  for (const curso of courses) {
+    for (const moduleId of curso.moduleIds) {
+      assert.ok(moduleIds.has(moduleId));
+    }
+  }
+});
+
+test('todo módulo pertence a exatamente um curso', () => {
+  for (const modulo of modules) {
+    const cursos = courses.filter((curso) => curso.moduleIds.includes(modulo.id));
+    assert.equal(cursos.length, 1, modulo.id);
+  }
+});
+
+test('durationSeconds das aulas, quando existe, é inteiro positivo', () => {
+  for (const aula of lessons) {
+    if (aula.durationSeconds !== undefined) {
+      assert.ok(Number.isInteger(aula.durationSeconds) && aula.durationSeconds > 0, aula.id);
+    }
+  }
+});
+
+test('exerciseMinutes dos módulos, quando existe, é inteiro positivo', () => {
+  for (const modulo of modules) {
+    if (modulo.exerciseMinutes !== undefined) {
+      assert.ok(Number.isInteger(modulo.exerciseMinutes) && modulo.exerciseMinutes > 0, modulo.id);
+    }
+  }
+});
+
+test('vídeo de encerramento do curso, quando existe, tem o formato de ID do YouTube', () => {
+  for (const curso of courses) {
+    if (curso.closingYoutubeId !== undefined) {
+      assert.match(curso.closingYoutubeId, /^[A-Za-z0-9_-]{11}$/);
+    }
+  }
+});
+
+test('formatarDuracao arredonda para minutos e separa horas', () => {
+  assert.equal(formatarDuracao(0), null);
+  assert.equal(formatarDuracao(59), '1 min');
+  assert.equal(formatarDuracao(3600), '1 h');
+  assert.equal(formatarDuracao(5400), '1 h 30 min');
 });

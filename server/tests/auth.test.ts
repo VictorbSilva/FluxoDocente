@@ -56,7 +56,7 @@ test('login com senha certa devolve o usuário e o cookie de sessão', async () 
   });
 
   assert.equal(resposta.status, 200);
-  assert.deepEqual(resposta.corpo, { user: { id: docenteId, email: 'docente@exemplo.com' } });
+  assert.deepEqual(resposta.corpo, { user: { id: docenteId, email: 'docente@exemplo.com', nome: null } });
 
   const sid = resposta.setCookie.find((valor) => valor.startsWith('fd.sid='));
   assert.ok(sid);
@@ -87,7 +87,7 @@ test('e-mail com espaços e maiúsculas entra na conta normalizada', async () =>
   });
 
   assert.equal(resposta.status, 200);
-  assert.deepEqual(resposta.corpo, { user: { id: fulanoId, email: 'fulano@x.com' } });
+  assert.deepEqual(resposta.corpo, { user: { id: fulanoId, email: 'fulano@x.com', nome: null } });
 });
 
 test('GET /api/auth/me exige sessão e não expõe o hash da senha', async () => {
@@ -103,7 +103,7 @@ test('GET /api/auth/me exige sessão e não expõe o hash da senha', async () =>
   const comCookie = await cliente.enviar('GET', '/api/auth/me');
 
   assert.equal(comCookie.status, 200);
-  assert.deepEqual(comCookie.corpo, { user: { id: docenteId, email: 'docente@exemplo.com' } });
+  assert.deepEqual(comCookie.corpo, { user: { id: docenteId, email: 'docente@exemplo.com', nome: null } });
   assert.ok(!('password_hash' in comCookie.corpo.user));
 });
 

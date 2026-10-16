@@ -1,4 +1,14 @@
-import type { Module, Lesson } from './contracts.js';
+import type { Course, Module, Lesson } from './contracts.js';
+
+export const courses: Course[] = [
+  {
+    id: 'ia-docencia',
+    title: 'Fluxo Docente',
+    description:
+      'Curso on-line para docentes do ensino superior aprenderem a usar ferramentas de Inteligência Artificial de forma ética e prática, do planejamento das aulas à produção de materiais e à organização da rotina acadêmica.',
+    moduleIds: ['modulo-1', 'modulo-2', 'modulo-3', 'modulo-4'],
+  },
+];
 
 export const modules: Module[] = [
   {
@@ -6,7 +16,6 @@ export const modules: Module[] = [
     title: 'Módulo 1: Pesquisa e Fundamentação',
     description:
       'Capacitação em Engenharia de Prompts para validação de informações essenciais.',
-    duration: '2-15 min',
     color: 'from-[#13c8b5] to-[#21a3a3]',
     tags: ['Gemini', 'ChatGPT', 'Claude', 'Perplexity', 'Consensus'],
   },
@@ -14,7 +23,6 @@ export const modules: Module[] = [
     id: 'modulo-2',
     title: 'Módulo 2: Design de Atividades e Inclusão',
     description: 'Geração ágil de exercícios, provas e feedbacks.',
-    duration: '5-20 min',
     color: 'from-[#21a3a3] to-[#6cf3d5]',
     tags: ['NotebookLM', 'ChatGPT', 'Claude'],
   },
@@ -23,7 +31,6 @@ export const modules: Module[] = [
     title: 'Módulo 3: Produção de Materiais Visuais',
     description:
       'Criação acelerada de objetos visuais de aprendizagem para aulas práticas e teóricas.',
-    duration: '10-25 min',
     color: 'from-[#7375a5] to-[#2b364a]',
     tags: ['Gamma', 'Gemini', 'ChatGPT'],
   },
@@ -32,7 +39,6 @@ export const modules: Module[] = [
     title: 'Módulo 4: Gestão de Rotina e Burocracia',
     description:
       'Automação do atendimento ao aluno, controle e organização automatizada de notas.',
-    duration: '8-30 min',
     color: 'from-orange-500 to-red-500',
     tags: ['Notion', 'Trello', 'ClickUp'],
   },
@@ -115,3 +121,4 @@ export const lessons: Lesson[] = [
 ];
 
 export const lessonIds: ReadonlySet<string> = new Set(lessons.map((l) => l.id));
+export const courseIds: ReadonlySet<string> = new Set(courses.map((c) => c.id));
