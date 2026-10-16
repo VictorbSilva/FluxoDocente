@@ -15,9 +15,9 @@ export function Header({
   onLogout,
 }: HeaderProps) {
   const navItems = [
-    { id: 'home', label: 'Início', icon: '🏠' },
-    { id: 'courses', label: 'Cursos', icon: '📚' },
-    { id: 'progress', label: 'Progresso', icon: '🏆' },
+    { id: 'home', label: 'Início' },
+    { id: 'courses', label: 'Cursos' },
+    { id: 'progress', label: 'Progresso' },
   ];
 
   return (
@@ -50,7 +50,6 @@ export function Header({
                     : 'hover:bg-white/10'
                 }`}
               >
-                <span className='text-sm'>{item.icon}</span>
                 <span className='text-sm'>{item.label}</span>
               </button>
             ))}
@@ -85,7 +84,6 @@ export function Header({
                   : 'hover:bg-white/10'
               }`}
             >
-              <span className='text-sm'>{item.icon}</span>
               <span className='text-xs'>{item.label}</span>
             </button>
           ))}

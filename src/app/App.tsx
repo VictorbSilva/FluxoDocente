@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { BookOpen } from 'lucide-react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { LoginSection } from './components/LoginSection';
@@ -183,7 +184,7 @@ export default function App() {
 
   const handleGetStarted = () => {
     irPara('courses', null);
-    toast.success('Vamos começar sua jornada de transformação! 🚀');
+    toast.success('Vamos começar sua jornada de transformação!');
   };
 
   const handleCategorySelect = (moduleId: string) => {
@@ -324,7 +325,7 @@ export default function App() {
             <div className='space-y-4'>
               <div className='flex items-center gap-2'>
                 <div className='bg-[#21a3a3] p-2 rounded-lg'>
-                  <span className='text-white'>⭐</span>
+                  <BookOpen className='h-5 w-5 text-white' />
                 </div>
                 <div>
                   <h3 className='text-xl'>FluxoDocente</h3>

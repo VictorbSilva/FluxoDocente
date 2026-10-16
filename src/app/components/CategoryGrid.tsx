@@ -9,19 +9,6 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Iniciante':
-        return 'bg-[#e0faf6] text-[#177a7a]';
-      case 'Intermediário':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'Avançado':
-        return 'bg-red-100 text-red-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-
   return (
     <section className='py-12 md:py-16 bg-white'>
       <div className='max-w-7xl mx-auto px-4'>
@@ -48,22 +35,9 @@ export function CategoryGrid({ onCategorySelect }: CategoryGridProps) {
                 ></div>
 
                 <CardHeader className='pb-4'>
-                  <div className='flex items-start justify-between'>
-                    <div className='flex items-center gap-3'>
-                      <div className='text-3xl'>{module.icon}</div>
-                      <div>
-                        <h3 className='text-lg text-gray-900 group-hover:text-[#177a7a] transition-colors'>
-                          {module.title}
-                        </h3>
-                        <Badge
-                          variant='secondary'
-                          className={getDifficultyColor(module.difficulty)}
-                        >
-                          {module.difficulty}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
+                  <h3 className='text-lg text-gray-900 group-hover:text-[#177a7a] transition-colors'>
+                    {module.title}
+                  </h3>
                 </CardHeader>
 
                 <CardContent className='space-y-4'>
