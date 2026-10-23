@@ -47,7 +47,7 @@ export function CategoryGrid({
             const total = lessons.filter((l) => l.moduleId === module.id).length;
             const duracao = formatarDuracao(duracaoDoModuloEmSegundos(module.id));
             const bloqueado = liberado ? !liberado(module.id) : false;
-            const temExercicio = exercicios.some((exercicio) => exercicio.moduleId === module.id);
+            const temExercicio = exercicios.some((exercicio) => exercicio.moduleId === module.id && exercicio.perguntas.length > 0);
             const resultado = resultados?.get(module.id);
 
             return (

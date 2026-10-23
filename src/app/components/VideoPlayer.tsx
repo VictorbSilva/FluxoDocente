@@ -303,7 +303,7 @@ export function VideoPlayer({
                 const aberto = abertos.has(m.id);
                 const bloqueado = !liberado(m.id);
                 const resultado = resultados.get(m.id);
-                const avaliacaoVisivel = exercicios.some((exercicio) => exercicio.moduleId === m.id)
+                const avaliacaoVisivel = exercicios.some((exercicio) => exercicio.moduleId === m.id && exercicio.perguntas.length > 0)
                   && (aberto || m.id === lesson.moduleId);
                 const listaId = 'aulas-' + m.id;
                 const visiveis = aberto

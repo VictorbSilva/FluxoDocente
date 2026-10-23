@@ -62,6 +62,8 @@ export default function App() {
     () => new Map(),
   );
   const [resultadosCarregados, setResultadosCarregados] = useState(false);
+  const [erroCarregamentoAula, setErroCarregamentoAula] = useState(false);
+  const [tentativaCarregamentoAula, setTentativaCarregamentoAula] = useState(0);
   const [exercicioAberto, setExercicioAberto] = useState<string | null>(null);
   const [nivelamento, setNivelamento] = useState<NivelamentoDTO | null>(null);
   const [nivelamentoAdiado, setNivelamentoAdiado] = useState(false);
@@ -172,6 +174,7 @@ export default function App() {
   useEffect(() => {
     setConcluidas(new Map());
     setProgressoCarregado(false);
+    setErroCarregamentoAula(false);
     if (!usuarioId) return;
 
     let cancelado = false;
@@ -185,13 +188,14 @@ export default function App() {
       })
       .catch((err) => {
         if (cancelado) return;
+        setErroCarregamentoAula(true);
         tratarErro(err);
       });
 
     return () => {
       cancelado = true;
     };
-  }, [usuarioId]);
+  }, [usuarioId, tentativaCarregamentoAula]);
 
   useEffect(() => {
     setMatriculas([]);
@@ -207,13 +211,14 @@ export default function App() {
       })
       .catch((err) => {
         if (cancelado) return;
+        setErroCarregamentoAula(true);
         tratarErro(err);
       });
 
     return () => {
       cancelado = true;
     };
-  }, [usuarioId]);
+  }, [usuarioId, tentativaCarregamentoAula]);
 
   useEffect(() => {
     setResultados(new Map());
@@ -229,13 +234,14 @@ export default function App() {
       })
       .catch((err) => {
         if (cancelado) return;
+        setErroCarregamentoAula(true);
         tratarErro(err);
       });
 
     return () => {
       cancelado = true;
     };
-  }, [usuarioId]);
+  }, [usuarioId, tentativaCarregamentoAula]);
 
   useEffect(() => {
     setNivelamento(null);
@@ -343,7 +349,7 @@ export default function App() {
       const aulasDoModulo = lessons.filter((item) => item.moduleId === aula.moduleId);
       if (
         aulasDoModulo.every((item) => item.id === lessonId || concluidas.has(item.id))
-        && exercicios.some((exercicio) => exercicio.moduleId === aula.moduleId)
+        && exercicios.some((exercicio) => exercicio.moduleId === aula.moduleId && exercicio.perguntas.length > 0)
         && !aprovados.has(aula.moduleId)
       ) {
         toast.info('Você concluiu as aulas deste módulo. Faça a avaliação para liberar o próximo.');
@@ -385,6 +391,17 @@ export default function App() {
     if (sessao.estado !== 'autenticada') return null;
 
     if (selectedLessonId) {
+      if (erroCarregamentoAula) {
+        return (
+          <AulaIndisponivel
+            titulo='Não foi possível carregar a aula'
+            texto='Tente novamente para carregar seu progresso e os dados do curso.'
+            acao='Tentar novamente'
+            onAcao={() => setTentativaCarregamentoAula((anterior) => anterior + 1)}
+          />
+        );
+      }
+
       if (!progressoCarregado || !matriculasCarregadas || !resultadosCarregados) {
         return <p className='text-center text-gray-500 py-12'>Carregando...</p>;
       }
@@ -544,7 +561,7 @@ export default function App() {
   // =======================================================================
   // APLICAÇÃO PRINCIPAL - Só renderiza se a guarda de rota for ultrapassada
   // =======================================================================
-  const exercicioSelecionado = exercicios.find((exercicio) => exercicio.moduleId === exercicioAberto);
+  const exercicioSelecionado = exercicios.find((exercicio) => exercicio.moduleId === exercicioAberto && exercicio.perguntas.length > 0);
 
   return (
     <div className='min-h-screen bg-white'>
