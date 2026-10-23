@@ -58,7 +58,7 @@ export function NivelamentoDialog({
         <DialogHeader>
           <DialogTitle>Módulo 0 · Questionário diagnóstico</DialogTitle>
           <DialogDescription>
-            Este diagnóstico não vale nota. Ele serve para indicarmos o melhor caminho para você. Responda sem consultar nenhum material e escolha a alternativa que você considera mais adequada. As respostas fazem parte da pesquisa do TCC.
+            Este diagnóstico não vale nota. Ele serve para indicarmos o melhor caminho para você. Responda sem consultar nenhum material e escolha a alternativa que você considera mais adequada. As respostas fazem parte da pesquisa do TCC. Se acertar 4 ou 5 questões de um módulo, você poderá pular esse módulo.
           </DialogDescription>
         </DialogHeader>
 

@@ -19,11 +19,12 @@ import { toast, Toaster } from 'sonner';
 import { catalogo, modules, lessons } from '../../shared/catalog';
 import { exercicios } from '../../shared/exercicios';
 import { perguntasDoNivelamento } from '../../shared/nivelamento';
-import { cursoDoModulo, moduloLiberado } from '../../shared/progressao';
+import { cursoDoModulo, moduloCompleto, moduloLiberado } from '../../shared/progressao';
 import type { CorrecaoDTO, MatriculaDTO, NivelamentoDTO, ResultadoExercicioDTO, UserDTO } from '../../shared/contracts';
 import {
   ApiError,
   concluirAula,
+  dispensarModulo,
   entrar,
   enviarExercicio,
   matriculas as consultarMatriculas,
@@ -70,7 +71,14 @@ export default function App() {
   const aprovados = new Set(
     [...resultados.values()].filter((resultado) => resultado.aprovado).map((resultado) => resultado.moduleId),
   );
-  const liberado = (moduleId: string) => moduloLiberado(catalogo, moduleId, concluidas, aprovados);
+  const dispensados = new Set<string>(nivelamento?.dispensados ?? []);
+  const liberado = (moduleId: string) => moduloLiberado(catalogo, moduleId, concluidas, aprovados, dispensados);
+  const dispensavel = (moduleId: string) =>
+    (nivelamento?.dispensaveis.includes(moduleId) ?? false)
+    && liberado(moduleId)
+    && !dispensados.has(moduleId)
+    && !moduloCompleto(catalogo, moduleId, concluidas, aprovados, dispensados)
+    && lessons.some((aula) => aula.moduleId === moduleId);
   // Anotação com alterações não salvas no player, informada pelo VideoPlayer.
   const pendenteRef = useRef(false);
   // Tela e aula exibidas agora, lidas pelo listener de popstate.
@@ -371,11 +379,24 @@ export default function App() {
     }
   };
 
+  const handleDispensar = async (moduleId: string): Promise<void> => {
+    try {
+      const nivelamentoAtualizado = await dispensarModulo(moduleId);
+      setNivelamento(nivelamentoAtualizado);
+      toast.success('Módulo dispensado. O próximo foi liberado.');
+    } catch (err) {
+      tratarErro(err);
+    }
+  };
+
   const handleResponderNivelamento = async (respostas: number[]): Promise<boolean> => {
     try {
       const nivelamentoRespondido = await responderNivelamento(respostas);
       setNivelamento(nivelamentoRespondido);
       toast.success('Obrigado! Suas respostas foram registradas.');
+      if (nivelamentoRespondido.dispensaveis.length > 0) {
+        toast.info('Você pode pular os módulos em que foi bem no diagnóstico. A opção aparece em Meus cursos, na vez de cada módulo.');
+      }
       return true;
     } catch (err) {
       if (err instanceof ApiError && err.code === 'nivelamento_respondido') {
@@ -463,6 +484,11 @@ export default function App() {
             liberado={liberado}
             resultados={resultados}
             onExercicio={setExercicioAberto}
+            nivelamento={nivelamento}
+            onResponderNivelamento={() => setNivelamentoAdiado(false)}
+            dispensavel={dispensavel}
+            dispensados={dispensados}
+            onDispensar={handleDispensar}
           />
         );
 
