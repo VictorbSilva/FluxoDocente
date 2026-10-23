@@ -1,9 +1,11 @@
 import type {
   ApiErrorBody,
   CompletionDTO,
+  CorrecaoDTO,
   MatriculaDTO,
   NoteDTO,
   ProgressDTO,
+  ResultadoExercicioDTO,
   UserDTO,
 } from '../../../shared/contracts';
 
@@ -91,6 +93,20 @@ export function sair(): Promise<void> {
 
 export function progresso(): Promise<ProgressDTO> {
   return requisitar<ProgressDTO>('/me/progress');
+}
+
+export async function resultadosDosExercicios(): Promise<ResultadoExercicioDTO[]> {
+  const { resultados } = await requisitar<{ resultados: ResultadoExercicioDTO[] }>(
+    '/me/exercicios',
+  );
+  return resultados;
+}
+
+export function enviarExercicio(moduleId: string, respostas: number[]): Promise<CorrecaoDTO> {
+  return requisitar<CorrecaoDTO>(
+    '/me/exercicios/' + encodeURIComponent(moduleId),
+    { method: 'POST', body: { respostas } },
+  );
 }
 
 export async function matriculas(): Promise<MatriculaDTO[]> {

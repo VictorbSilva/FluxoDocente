@@ -11,17 +11,23 @@ import { Painel } from './components/Painel';
 import { MeusCursos } from './components/MeusCursos';
 import { NossosCursos } from './components/NossosCursos';
 import { MeusCertificados } from './components/MeusCertificados';
+import { AulaIndisponivel } from './components/AulaIndisponivel';
+import { ExercicioDialog } from './components/ExercicioDialog';
 import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
-import { modules, lessons } from '../../shared/catalog';
-import type { MatriculaDTO, UserDTO } from '../../shared/contracts';
+import { catalogo, modules, lessons } from '../../shared/catalog';
+import { exercicios } from '../../shared/exercicios';
+import { cursoDoModulo, moduloLiberado } from '../../shared/progressao';
+import type { CorrecaoDTO, MatriculaDTO, ResultadoExercicioDTO, UserDTO } from '../../shared/contracts';
 import {
   ApiError,
   concluirAula,
   entrar,
+  enviarExercicio,
   matriculas as consultarMatriculas,
   matricular,
   progresso,
+  resultadosDosExercicios,
   sair,
   salvarPerfil,
   sessaoAtual,
@@ -48,6 +54,15 @@ export default function App() {
   const [progressoCarregado, setProgressoCarregado] = useState(false);
   const [matriculas, setMatriculas] = useState<MatriculaDTO[]>([]);
   const [matriculasCarregadas, setMatriculasCarregadas] = useState(false);
+  const [resultados, setResultados] = useState<Map<string, ResultadoExercicioDTO>>(
+    () => new Map(),
+  );
+  const [resultadosCarregados, setResultadosCarregados] = useState(false);
+  const [exercicioAberto, setExercicioAberto] = useState<string | null>(null);
+  const aprovados = new Set(
+    [...resultados.values()].filter((resultado) => resultado.aprovado).map((resultado) => resultado.moduleId),
+  );
+  const liberado = (moduleId: string) => moduloLiberado(catalogo, moduleId, concluidas, aprovados);
   // Anotação com alterações não salvas no player, informada pelo VideoPlayer.
   const pendenteRef = useRef(false);
   // Tela e aula exibidas agora, lidas pelo listener de popstate.
@@ -135,6 +150,9 @@ export default function App() {
       setConcluidas(new Map());
       setMatriculas([]);
       setMatriculasCarregadas(false);
+      setResultados(new Map());
+      setResultadosCarregados(false);
+      setExercicioAberto(null);
       toast.info('Sua sessão expirou. Entre novamente.');
     } else {
       toast.error(err.message);
@@ -189,6 +207,28 @@ export default function App() {
     };
   }, [usuarioId]);
 
+  useEffect(() => {
+    setResultados(new Map());
+    setResultadosCarregados(false);
+    if (!usuarioId) return;
+
+    let cancelado = false;
+    resultadosDosExercicios()
+      .then((resultados) => {
+        if (cancelado) return;
+        setResultados(new Map(resultados.map((resultado) => [resultado.moduleId, resultado])));
+        setResultadosCarregados(true);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        tratarErro(err);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [usuarioId]);
+
   const handleLogin = async (email: string, senha: string) => {
     const usuario = await entrar(email, senha);
     setSessao({ estado: 'autenticada', usuario });
@@ -220,6 +260,9 @@ export default function App() {
     setConcluidas(new Map());
     setMatriculas([]);
     setMatriculasCarregadas(false);
+    setResultados(new Map());
+    setResultadosCarregados(false);
+    setExercicioAberto(null);
     history.replaceState(null, '', '/');
     setCurrentSection('home');
     setSelectedLessonId(null);
@@ -229,12 +272,12 @@ export default function App() {
     irPara(section, null);
   };
 
-  const handleMatricular = async (courseId: string): Promise<void> => {
+  const handleMatricular = async (courseId: string, irParaMeusCursos = true): Promise<void> => {
     try {
       const matricula = await matricular(courseId);
       setMatriculas((anteriores) => [...anteriores, matricula]);
       toast.success('Matrícula feita. O curso está em Meus cursos.');
-      irPara('meus-cursos', null);
+      if (irParaMeusCursos) irPara('meus-cursos', null);
     } catch (err) {
       tratarErro(err);
     }
@@ -265,8 +308,29 @@ export default function App() {
       const { completedAt } = await concluirAula(lessonId);
       setConcluidas((anterior) => new Map(anterior).set(lessonId, completedAt));
       toast.success('Aula marcada como concluída.');
+      const aula = lessons.find((item) => item.id === lessonId);
+      const aulasDoModulo = lessons.filter((item) => item.moduleId === aula.moduleId);
+      if (
+        aulasDoModulo.every((item) => item.id === lessonId || concluidas.has(item.id))
+        && exercicios.some((exercicio) => exercicio.moduleId === aula.moduleId)
+        && !aprovados.has(aula.moduleId)
+      ) {
+        toast.info('Você concluiu as aulas deste módulo. Faça a avaliação para liberar o próximo.');
+      }
     } catch (err) {
       tratarErro(err);
+    }
+  };
+
+  const handleEnviarExercicio = async (moduleId: string, respostas: number[]): Promise<CorrecaoDTO | null> => {
+    try {
+      const correcao = await enviarExercicio(moduleId, respostas);
+      setResultados((anteriores) => new Map(anteriores).set(moduleId, correcao.resultado));
+      if (correcao.aprovadoNestaTentativa) toast.success('Avaliação aprovada.');
+      return correcao;
+    } catch (err) {
+      tratarErro(err);
+      return null;
     }
   };
 
@@ -274,8 +338,35 @@ export default function App() {
     if (sessao.estado !== 'autenticada') return null;
 
     if (selectedLessonId) {
+      if (!progressoCarregado || !matriculasCarregadas || !resultadosCarregados) {
+        return <p className='text-center text-gray-500 py-12'>Carregando...</p>;
+      }
+
       const lesson = lessons.find((l) => l.id === selectedLessonId);
       const module = modules.find((m) => m.id === lesson.moduleId);
+      const curso = cursoDoModulo(catalogo, module.id);
+
+      if (!matriculas.some((matricula) => matricula.courseId === curso.id)) {
+        return (
+          <AulaIndisponivel
+            titulo='Matrícula necessária'
+            texto={'Para assistir às aulas e registrar seu progresso, faça a matrícula no curso ' + curso.title + '.'}
+            acao='Matricular-se'
+            onAcao={() => handleMatricular(curso.id, false)}
+          />
+        );
+      }
+
+      if (!liberado(module.id)) {
+        return (
+          <AulaIndisponivel
+            titulo='Módulo bloqueado'
+            texto='Conclua as aulas e a avaliação do módulo anterior para liberar este módulo.'
+            acao='Ir para Meus cursos'
+            onAcao={() => irPara('meus-cursos', null)}
+          />
+        );
+      }
 
       return (
         <VideoPlayer
@@ -289,6 +380,9 @@ export default function App() {
             pendenteRef.current = pendente;
           }}
           onErro={tratarErro}
+          liberado={liberado}
+          resultados={resultados}
+          onAbrirExercicio={setExercicioAberto}
         />
       );
     }
@@ -298,10 +392,13 @@ export default function App() {
         return (
           <MeusCursos
             matriculas={matriculas}
-            carregado={matriculasCarregadas && progressoCarregado}
+            carregado={matriculasCarregadas && progressoCarregado && resultadosCarregados}
             concluidas={concluidas}
             onCategorySelect={handleCategorySelect}
             onVerNossosCursos={() => irPara('nossos-cursos', null)}
+            liberado={liberado}
+            resultados={resultados}
+            onExercicio={setExercicioAberto}
           />
         );
 
@@ -400,6 +497,8 @@ export default function App() {
   // =======================================================================
   // APLICAÇÃO PRINCIPAL - Só renderiza se a guarda de rota for ultrapassada
   // =======================================================================
+  const exercicioSelecionado = exercicios.find((exercicio) => exercicio.moduleId === exercicioAberto);
+
   return (
     <div className='min-h-screen bg-white'>
       <Header
@@ -410,6 +509,17 @@ export default function App() {
       />
 
       <main>{renderCurrentSection()}</main>
+
+      {exercicioSelecionado && (
+        <ExercicioDialog
+          exercicio={exercicioSelecionado}
+          tituloDoModulo={modules.find((modulo) => modulo.id === exercicioAberto).title}
+          resultado={resultados.get(exercicioAberto)}
+          aberto={true}
+          onFechar={() => setExercicioAberto(null)}
+          onEnviar={(respostas) => handleEnviarExercicio(exercicioAberto, respostas)}
+        />
+      )}
 
       {/* Footer */}
       <Rodape />

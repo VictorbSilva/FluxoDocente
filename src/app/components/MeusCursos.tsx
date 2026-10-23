@@ -5,7 +5,7 @@ import { Progress } from './ui/progress';
 import { CategoryGrid } from './CategoryGrid';
 import { courses, lessons } from '../../../shared/catalog';
 import { duracaoDoCursoEmSegundos, formatarDuracao } from '../../../shared/duracao';
-import type { MatriculaDTO } from '../../../shared/contracts';
+import type { MatriculaDTO, ResultadoExercicioDTO } from '../../../shared/contracts';
 
 interface MeusCursosProps {
   matriculas: MatriculaDTO[];
@@ -13,6 +13,9 @@ interface MeusCursosProps {
   concluidas: ReadonlyMap<string, string>;
   onCategorySelect: (categoryId: string) => void;
   onVerNossosCursos: () => void;
+  liberado: (moduleId: string) => boolean;
+  resultados: ReadonlyMap<string, ResultadoExercicioDTO>;
+  onExercicio: (moduleId: string) => void;
 }
 
 export function MeusCursos({
@@ -21,6 +24,9 @@ export function MeusCursos({
   concluidas,
   onCategorySelect,
   onVerNossosCursos,
+  liberado,
+  resultados,
+  onExercicio,
 }: MeusCursosProps) {
   const cursos = courses.filter((curso) =>
     matriculas.some((matricula) => matricula.courseId === curso.id),
@@ -69,6 +75,9 @@ export function MeusCursos({
                   moduleIds={curso.moduleIds}
                   mostrarTitulo={false}
                   onCategorySelect={onCategorySelect}
+                  liberado={liberado}
+                  resultados={resultados}
+                  onExercicio={onExercicio}
                 />
               </div>
             );
