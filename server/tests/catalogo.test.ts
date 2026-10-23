@@ -128,6 +128,33 @@ test('toda pergunta tem enunciado e ao menos 2 alternativas, nenhum deles vazio'
   }
 });
 
+test('o módulo avaliado por uma pergunta do nivelamento existe, quando informado', () => {
+  const moduleIds = new Set(modules.map((modulo) => modulo.id));
+
+  for (const pergunta of catalogo.nivelamento) {
+    if (pergunta.moduleId !== undefined) {
+      assert.ok(moduleIds.has(pergunta.moduleId), pergunta.id);
+    }
+  }
+});
+
+test('as perguntas do nivelamento têm moduleId em todas ou em nenhuma', () => {
+  const comModulo = catalogo.nivelamento.filter((pergunta) => pergunta.moduleId !== undefined);
+  assert.ok(comModulo.length === 0 || comModulo.length === catalogo.nivelamento.length);
+});
+
+test('o questionário diagnóstico tem 20 perguntas com quatro alternativas, cinco por módulo', () => {
+  assert.equal(catalogo.nivelamento.length, 20);
+
+  for (const pergunta of catalogo.nivelamento) {
+    assert.equal(pergunta.alternativas.length, 4, pergunta.id);
+  }
+
+  for (const modulo of modules) {
+    assert.equal(catalogo.nivelamento.filter((pergunta) => pergunta.moduleId === modulo.id).length, 5, modulo.id);
+  }
+});
+
 function indiceValido(indice: number, pergunta: PerguntaDTO): boolean {
   return Number.isInteger(indice) && indice >= 0 && indice < pergunta.alternativas.length;
 }

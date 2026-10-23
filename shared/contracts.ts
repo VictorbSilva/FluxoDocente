@@ -81,6 +81,7 @@ export interface Lesson {
 
 export interface PerguntaDTO {
   id: string;
+  moduleId?: string; // módulo avaliado; usado só no questionário diagnóstico
   enunciado: string;
   alternativas: string[];
 }

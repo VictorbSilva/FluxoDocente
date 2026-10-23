@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { modules } from '../../../shared/catalog';
 import type { PerguntaDTO } from '../../../shared/contracts';
 import { Button } from './ui/button';
 import {
@@ -55,34 +56,41 @@ export function NivelamentoDialog({
     <Dialog open={aberto} onOpenChange={(open) => { if (!open) onAdiar(); }}>
       <DialogContent className='max-h-[85vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>Nivelamento</DialogTitle>
+          <DialogTitle>Módulo 0 · Questionário diagnóstico</DialogTitle>
           <DialogDescription>
-            Antes de começar, responda a estas perguntas para conhecermos seu ponto de partida. As respostas fazem parte da pesquisa do TCC, e o resultado não é mostrado.
+            Este diagnóstico não vale nota. Ele serve para indicarmos o melhor caminho para você. Responda sem consultar nenhum material e escolha a alternativa que você considera mais adequada. As respostas fazem parte da pesquisa do TCC.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={(event) => { event.preventDefault(); void enviar(); }} className='space-y-6'>
           {perguntas.map((pergunta, indice) => (
-            <fieldset key={pergunta.id} disabled={enviando} className='space-y-3'>
-              <legend className='whitespace-pre-line'>
-                {indice + 1}. {pergunta.enunciado}
-              </legend>
-              {pergunta.alternativas.map((alternativa, indiceAlternativa) => (
-                <label key={indiceAlternativa} className='flex items-start gap-2 text-sm text-gray-700'>
-                  <input
-                    type='radio'
-                    name={pergunta.id}
-                    value={indiceAlternativa}
-                    checked={respostas[indice] === indiceAlternativa}
-                    onChange={() => setRespostas((anteriores) =>
-                      anteriores.map((resposta, i) => i === indice ? indiceAlternativa : resposta),
-                    )}
-                    className='mt-1 shrink-0 accent-[#177a7a]'
-                  />
-                  <span>{String.fromCharCode(65 + indiceAlternativa)}) {alternativa}</span>
-                </label>
-              ))}
-            </fieldset>
+            <Fragment key={pergunta.id}>
+              {pergunta.moduleId && perguntas.findIndex((item) => item.moduleId === pergunta.moduleId) === indice && (
+                <h3 className='text-base text-gray-900 pt-2'>
+                  {modules.find((modulo) => modulo.id === pergunta.moduleId)?.title}
+                </h3>
+              )}
+              <fieldset disabled={enviando} className='space-y-3'>
+                <legend className='whitespace-pre-line'>
+                  {indice + 1}. {pergunta.enunciado}
+                </legend>
+                {pergunta.alternativas.map((alternativa, indiceAlternativa) => (
+                  <label key={indiceAlternativa} className='flex items-start gap-2 text-sm text-gray-700'>
+                    <input
+                      type='radio'
+                      name={pergunta.id}
+                      value={indiceAlternativa}
+                      checked={respostas[indice] === indiceAlternativa}
+                      onChange={() => setRespostas((anteriores) =>
+                        anteriores.map((resposta, i) => i === indice ? indiceAlternativa : resposta),
+                      )}
+                      className='mt-1 shrink-0 accent-[#177a7a]'
+                    />
+                    <span>{String.fromCharCode(65 + indiceAlternativa)}) {alternativa}</span>
+                  </label>
+                ))}
+              </fieldset>
+            </Fragment>
           ))}
 
           <DialogFooter>

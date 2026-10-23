@@ -8,7 +8,7 @@ export const courses: Course[] = [
     title: 'Fluxo Docente',
     description:
       'Curso on-line para docentes do ensino superior aprenderem a usar ferramentas de Inteligência Artificial de forma ética e prática, do planejamento das aulas à produção de materiais e à organização da rotina acadêmica.',
-    moduleIds: ['modulo-1', 'modulo-2', 'modulo-3', 'modulo-4', 'modulo-5'],
+    moduleIds: ['modulo-1', 'modulo-2', 'modulo-3', 'modulo-4'],
     closingYoutubeId: 'Q-9P8p9psng',
   },
 ];
@@ -39,15 +39,7 @@ export const modules: Module[] = [
   },
   {
     id: 'modulo-4',
-    title: 'Módulo 4: Produção de Materiais Visuais',
-    description:
-      'Criação acelerada de objetos visuais de aprendizagem para aulas práticas e teóricas.',
-    color: 'from-[#7375a5] to-[#2b364a]',
-    tags: ['Gamma', 'Gemini', 'ChatGPT'],
-  },
-  {
-    id: 'modulo-5',
-    title: 'Módulo 5: Gestão de Rotina e Burocracia',
+    title: 'Módulo 4: Gestão da Rotina e Consolidação',
     description:
       'Automação do atendimento ao aluno, controle e organização automatizada de notas.',
     color: 'from-orange-500 to-red-500',
@@ -175,6 +167,41 @@ export const lessons: Lesson[] = [
     youtubeId: 'SNvIB83J3rE',
     title: 'Aula 5 Avaliação e Feedback',
     durationSeconds: 468,
+  },
+  {
+    id: 'm3-a03',
+    moduleId: 'modulo-3',
+    youtubeId: 'Eiw74gLWQvQ',
+    title: 'Aula 6 Avaliação e Feedback',
+    durationSeconds: 671,
+  },
+  {
+    id: 'm4-a01',
+    moduleId: 'modulo-4',
+    youtubeId: 'wD0e-njlSKc',
+    title: 'Introdução do módulo 4 Gestão da Rotina e Consolidação',
+    durationSeconds: 116,
+  },
+  {
+    id: 'm4-a02',
+    moduleId: 'modulo-4',
+    youtubeId: 'REs9tKwbRDU',
+    title: 'Aula 7 Gestão da Rotina e Consolidação',
+    durationSeconds: 404,
+  },
+  {
+    id: 'm4-a03',
+    moduleId: 'modulo-4',
+    youtubeId: '1vYGYxMS5hE',
+    title: 'Prática de montagem do cockpit docente',
+    durationSeconds: 185,
+  },
+  {
+    id: 'm4-a04',
+    moduleId: 'modulo-4',
+    youtubeId: 'AfK9HopCwng',
+    title: 'Aula 8 Gestão da Rotina e Consolidação',
+    durationSeconds: 466,
   },
 ];
 
