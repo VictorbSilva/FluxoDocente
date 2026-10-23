@@ -6,7 +6,7 @@ export const courses: Course[] = [
     title: 'Fluxo Docente',
     description:
       'Curso on-line para docentes do ensino superior aprenderem a usar ferramentas de Inteligência Artificial de forma ética e prática, do planejamento das aulas à produção de materiais e à organização da rotina acadêmica.',
-    moduleIds: ['modulo-1', 'modulo-2', 'modulo-3', 'modulo-4'],
+    moduleIds: ['modulo-1', 'modulo-2', 'modulo-3', 'modulo-4', 'modulo-5'],
     closingYoutubeId: 'Q-9P8p9psng',
   },
 ];
@@ -14,7 +14,7 @@ export const courses: Course[] = [
 export const modules: Module[] = [
   {
     id: 'modulo-1',
-    title: '[TÍTULO DO MÓDULO 1]',
+    title: 'Módulo 1: Engenharia de Prompt',
     description:
       'Capacitação em Engenharia de Prompts para validação de informações essenciais.',
     color: 'from-[#13c8b5] to-[#21a3a3]',
@@ -22,22 +22,29 @@ export const modules: Module[] = [
   },
   {
     id: 'modulo-2',
-    title: '[TÍTULO DO MÓDULO 2]',
-    description: 'Geração ágil de exercícios, provas e feedbacks.',
+    title: 'Módulo 2: Otimização do Planejamento',
+    description: 'Uso de ferramentas de Inteligência Artificial para otimizar o planejamento das aulas.',
     color: 'from-[#21a3a3] to-[#6cf3d5]',
     tags: ['NotebookLM', 'ChatGPT', 'Claude'],
   },
   {
     id: 'modulo-3',
-    title: 'Módulo 3: Produção de Materiais Visuais',
+    title: 'Módulo 3: Avaliação e Feedback',
+    description: 'Geração ágil de exercícios, provas e feedbacks.',
+    color: 'from-[#177a7a] to-[#21a3a3]',
+    tags: [],
+  },
+  {
+    id: 'modulo-4',
+    title: 'Módulo 4: Produção de Materiais Visuais',
     description:
       'Criação acelerada de objetos visuais de aprendizagem para aulas práticas e teóricas.',
     color: 'from-[#7375a5] to-[#2b364a]',
     tags: ['Gamma', 'Gemini', 'ChatGPT'],
   },
   {
-    id: 'modulo-4',
-    title: 'Módulo 4: Gestão de Rotina e Burocracia',
+    id: 'modulo-5',
+    title: 'Módulo 5: Gestão de Rotina e Burocracia',
     description:
       'Automação do atendimento ao aluno, controle e organização automatizada de notas.',
     color: 'from-orange-500 to-red-500',
@@ -135,7 +142,7 @@ export const lessons: Lesson[] = [
     id: 'm2-a01',
     moduleId: 'modulo-2',
     youtubeId: 'cokz3ZjpzlI',
-    title: 'Introdução do módulo 2 Otimização do planejamento',
+    title: 'Introdução do módulo 2 Otimização do Planejamento',
     durationSeconds: 108,
   },
   {
@@ -149,8 +156,22 @@ export const lessons: Lesson[] = [
     id: 'm2-a03',
     moduleId: 'modulo-2',
     youtubeId: 'nDYk6VB1KlE',
-    title: 'Aula 4 Otimização do planejamento',
+    title: 'Aula 4 Otimização do Planejamento',
     durationSeconds: 571,
+  },
+  {
+    id: 'm3-a01',
+    moduleId: 'modulo-3',
+    youtubeId: 'zIZb-b4aphI',
+    title: 'Introdução do módulo 3 Avaliação e Feedback',
+    durationSeconds: 111,
+  },
+  {
+    id: 'm3-a02',
+    moduleId: 'modulo-3',
+    youtubeId: 'SNvIB83J3rE',
+    title: 'Aula 5 Avaliação e Feedback',
+    durationSeconds: 468,
   },
 ];
 
