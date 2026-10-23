@@ -1,7 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { catalogo, courses, modules, lessons } from '../../shared/catalog.js';
+import type { PerguntaDTO } from '../../shared/contracts.js';
 import { formatarDuracao } from '../../shared/duracao.js';
+import { gabaritoDosExercicios } from '../exercicios/gabarito.js';
+import { gabaritoDoNivelamento } from '../nivelamento/gabarito.js';
 
 test('IDs de módulo são únicos', () => {
   assert.equal(new Set(modules.map((modulo) => modulo.id)).size, modules.length);
@@ -119,6 +125,56 @@ test('toda pergunta tem enunciado e ao menos 2 alternativas, nenhum deles vazio'
     for (const alternativa of pergunta.alternativas) {
       assert.ok(alternativa.trim().length > 0, pergunta.id);
     }
+  }
+});
+
+function indiceValido(indice: number, pergunta: PerguntaDTO): boolean {
+  return Number.isInteger(indice) && indice >= 0 && indice < pergunta.alternativas.length;
+}
+
+test('todo exercício tem gabarito com um índice válido por pergunta', () => {
+  for (const exercicio of catalogo.exercicios) {
+    const gabarito = gabaritoDosExercicios[exercicio.moduleId];
+    assert.ok(gabarito, exercicio.moduleId);
+    assert.equal(gabarito.length, exercicio.perguntas.length, exercicio.moduleId);
+
+    exercicio.perguntas.forEach((pergunta, indice) => {
+      assert.ok(indiceValido(gabarito[indice], pergunta), pergunta.id);
+    });
+  }
+});
+
+test('todo gabarito de exercício aponta para um exercício existente', () => {
+  const comExercicio = new Set(catalogo.exercicios.map((exercicio) => exercicio.moduleId));
+
+  for (const moduleId of Object.keys(gabaritoDosExercicios)) {
+    assert.ok(comExercicio.has(moduleId), moduleId);
+  }
+});
+
+test('o gabarito do nivelamento é null ou tem um índice válido por pergunta', () => {
+  const gabarito = gabaritoDoNivelamento;
+
+  if (gabarito === null) {
+    return;
+  }
+
+  assert.equal(gabarito.length, catalogo.nivelamento.length);
+  catalogo.nivelamento.forEach((pergunta, indice) => {
+    assert.ok(indiceValido(gabarito[indice], pergunta), pergunta.id);
+  });
+});
+
+test('nenhum arquivo de src/ importa algo de server/', () => {
+  const raiz = fileURLToPath(new URL('../../src/', import.meta.url));
+  const arquivos = readdirSync(raiz, { recursive: true, encoding: 'utf8' })
+    .filter((arquivo) => /\.tsx?$/.test(arquivo));
+
+  assert.ok(arquivos.length > 0);
+
+  for (const arquivo of arquivos) {
+    const conteudo = readFileSync(path.join(raiz, arquivo), 'utf8');
+    assert.doesNotMatch(conteudo, /from\s+['"][^'"]*\bserver\//, arquivo);
   }
 });
 

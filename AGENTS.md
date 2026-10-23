@@ -24,12 +24,14 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `shared/catalog.ts`: catálogo de módulos e aulas, com IDs de aula estáveis e identificadores de vídeos do YouTube.
 - `shared/duracao.ts`: duração de módulos e cursos, somando vídeos e exercícios.
 - `shared/progressao.ts`: regra de liberação de módulos e de conclusão do curso, usada pela API e pela tela.
+- `shared/exercicios.ts` e `shared/nivelamento.ts`: perguntas, sem gabarito.
 - `server/app.ts`: monta o Express, os cabeçalhos de segurança, a proteção contra CSRF, as sessões, as rotas `/api` e o front estático com fallback para `index.html` em produção.
 - `server/config.ts`: carrega o `.env` fora de produção e lê porta, URL do banco e segredo de sessão.
 - `server/index.ts`: inicia o servidor com o pool do banco e o catálogo.
 - `server/auth/`: login, sessão atual, logout, hash de senha com scrypt e verificação de sessão.
 - `server/progresso/`: consulta e conclusão de aulas para o dono da sessão.
 - `server/cursos/`: matrículas e nome do usuário.
+- `server/exercicios/` e `server/nivelamento/`: rotas e gabaritos; nunca importados por `src/`.
 - `server/db/`: pool do Postgres e aplicação das migrações.
 - `server/migrations/`: migrações SQL de contas, sessões e conclusões de aulas.
 - `server/usuarios.ts`: criação e listagem de contas, geração de senha e reset com revogação das sessões.
@@ -85,6 +87,8 @@ Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). O front não te
 9. O dono do progresso vem sempre da sessão. Nenhuma rota aceita `userId` no corpo, na query ou no caminho.
 10. Anotações: uma anotação livre por aula por usuário, salva por ele; até 5.000 caracteres; privadas, a equipe da pesquisa não lê. Motivo: apoio ao estudo sem virar dado da pesquisa.
 11. Matrícula e bloqueio: concluir aula e anotar exigem matrícula no curso. O primeiro módulo do curso está sempre liberado; cada módulo seguinte libera quando o anterior tem todas as aulas concluídas e, se tiver exercício, o exercício aprovado. Módulo sem aulas nunca fica completo. A regra fica em `shared/progressao.ts` e quem garante é a API. Motivo: pedido do orientador (16/10).
+12. Exercícios: um por módulo, de múltipla escolha. O gabarito fica só em `server/` e nunca chega ao navegador. Aprovação com 70% de acertos; pode ser refeito sem limite, vale a melhor nota e a aprovação não se perde. As respostas das tentativas não são guardadas.
+13. Nivelamento: respondido uma vez, depois do login. Respostas e acertos ficam no banco como dado da pesquisa e nunca são mostrados ao docente nem devolvidos pela API. Precisa constar no termo de consentimento.
 
 ## Executar tarefa
 

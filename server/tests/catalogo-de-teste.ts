@@ -1,5 +1,6 @@
 import type pg from 'pg';
 import type { Catalogo, Module, PerguntaDTO } from '../../shared/contracts.js';
+import type { Gabaritos } from '../exercicios/gabarito.js';
 
 function modulo(id: string): Module {
   return { id, title: `Módulo ${id}`, description: 'Módulo de teste.', color: 'from-gray-500 to-gray-700', tags: [] };
@@ -28,6 +29,12 @@ export const catalogoDeTeste: Catalogo = {
   ],
   exercicios: [{ moduleId: 'mod-b', perguntas: perguntas('b', 10) }],
   nivelamento: perguntas('n', 3),
+};
+
+// A alternativa certa de todas as perguntas de 'mod-b' é a primeira.
+export const gabaritoDeTeste: Gabaritos = {
+  exercicios: { 'mod-b': Array(10).fill(0) },
+  nivelamento: [0, 1, 2],
 };
 
 export async function matricular(pool: pg.Pool, userId: string, courseId = 'curso-teste'): Promise<void> {
