@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react';
+import { Award, Clock } from 'lucide-react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -12,6 +12,8 @@ interface MeusCursosProps {
   matriculas: MatriculaDTO[];
   carregado: boolean;
   concluidas: ReadonlyMap<string, string>;
+  concluido: (courseId: string) => boolean;
+  onVerMensagem: (courseId: string) => void;
   onCategorySelect: (categoryId: string) => void;
   onVerNossosCursos: () => void;
   liberado: (moduleId: string) => boolean;
@@ -28,6 +30,8 @@ export function MeusCursos({
   matriculas,
   carregado,
   concluidas,
+  concluido,
+  onVerMensagem,
   onCategorySelect,
   onVerNossosCursos,
   liberado,
@@ -62,6 +66,7 @@ export function MeusCursos({
             const total = aulas.length;
             const feitas = aulas.filter((l) => concluidas.has(l.id)).length;
             const duracao = formatarDuracao(duracaoDoCursoEmSegundos(curso.id));
+            const finalizado = concluido(curso.id);
             const modulosDispensaveis = modules.filter((modulo) =>
               curso.moduleIds.includes(modulo.id)
               && nivelamento?.dispensaveis.includes(modulo.id)
@@ -71,7 +76,15 @@ export function MeusCursos({
             return (
               <div key={curso.id}>
                 <Card className='p-6'>
-                  <h3 className='text-xl text-gray-900'>{curso.title}</h3>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <h3 className='text-xl text-gray-900'>{curso.title}</h3>
+                    {finalizado && (
+                      <Badge className='bg-[#e0faf6] text-[#177a7a]'>
+                        <Award className='h-4 w-4' />
+                        Concluído
+                      </Badge>
+                    )}
+                  </div>
                   <p className='text-gray-600'>{curso.description}</p>
                   <div className='flex flex-wrap items-center gap-4 text-sm text-gray-500'>
                     <span>{feitas} de {total} aulas concluídas</span>
@@ -86,6 +99,11 @@ export function MeusCursos({
                     aria-label={'Progresso no curso ' + curso.title}
                     value={total ? (feitas / total) * 100 : 0}
                   />
+                  {finalizado && (
+                    <Button variant='outline' onClick={() => onVerMensagem(curso.id)} className='self-start'>
+                      Ver mensagem de encerramento
+                    </Button>
+                  )}
                 </Card>
                 {nivelamento?.disponivel && (
                   <Card className='p-6 mt-6 items-start'>

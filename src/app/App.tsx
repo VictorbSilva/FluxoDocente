@@ -14,12 +14,13 @@ import { MeusCertificados } from './components/MeusCertificados';
 import { AulaIndisponivel } from './components/AulaIndisponivel';
 import { ExercicioDialog } from './components/ExercicioDialog';
 import { NivelamentoDialog } from './components/NivelamentoDialog';
+import { ConclusaoDialog } from './components/ConclusaoDialog';
 import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
 import { catalogo, modules, lessons } from '../../shared/catalog';
 import { exercicios } from '../../shared/exercicios';
 import { perguntasDoNivelamento } from '../../shared/nivelamento';
-import { cursoDoModulo, moduloCompleto, moduloLiberado } from '../../shared/progressao';
+import { cursoConcluido, cursoDoModulo, moduloCompleto, moduloLiberado } from '../../shared/progressao';
 import type { CorrecaoDTO, MatriculaDTO, NivelamentoDTO, ResultadoExercicioDTO, UserDTO } from '../../shared/contracts';
 import {
   ApiError,
@@ -66,6 +67,7 @@ export default function App() {
   const [erroCarregamentoAula, setErroCarregamentoAula] = useState(false);
   const [tentativaCarregamentoAula, setTentativaCarregamentoAula] = useState(0);
   const [exercicioAberto, setExercicioAberto] = useState<string | null>(null);
+  const [cursoConcluidoAgora, setCursoConcluidoAgora] = useState<string | null>(null);
   const [nivelamento, setNivelamento] = useState<NivelamentoDTO | null>(null);
   const [nivelamentoAdiado, setNivelamentoAdiado] = useState(false);
   const aprovados = new Set(
@@ -169,6 +171,7 @@ export default function App() {
       setResultados(new Map());
       setResultadosCarregados(false);
       setExercicioAberto(null);
+      setCursoConcluidoAgora(null);
       setNivelamento(null);
       setNivelamentoAdiado(false);
       toast.info('Sua sessão expirou. Entre novamente.');
@@ -306,6 +309,7 @@ export default function App() {
     setResultados(new Map());
     setResultadosCarregados(false);
     setExercicioAberto(null);
+    setCursoConcluidoAgora(null);
     setNivelamento(null);
     setNivelamentoAdiado(false);
     history.replaceState(null, '', '/');
@@ -354,6 +358,14 @@ export default function App() {
       setConcluidas((anterior) => new Map(anterior).set(lessonId, completedAt));
       toast.success('Aula marcada como concluída.');
       const aula = lessons.find((item) => item.id === lessonId);
+      const curso = cursoDoModulo(catalogo, aula.moduleId);
+      const novasConcluidas = new Map(concluidas).set(lessonId, completedAt);
+      if (
+        !cursoConcluido(catalogo, curso.id, concluidas, aprovados, dispensados)
+        && cursoConcluido(catalogo, curso.id, novasConcluidas, aprovados, dispensados)
+      ) {
+        setCursoConcluidoAgora(curso.id);
+      }
       const aulasDoModulo = lessons.filter((item) => item.moduleId === aula.moduleId);
       if (
         aulasDoModulo.every((item) => item.id === lessonId || concluidas.has(item.id))
@@ -371,6 +383,15 @@ export default function App() {
     try {
       const correcao = await enviarExercicio(moduleId, respostas);
       setResultados((anteriores) => new Map(anteriores).set(moduleId, correcao.resultado));
+      const curso = cursoDoModulo(catalogo, moduleId);
+      const novosAprovados = new Set(aprovados);
+      if (correcao.resultado.aprovado) novosAprovados.add(moduleId);
+      if (
+        !cursoConcluido(catalogo, curso.id, concluidas, aprovados, dispensados)
+        && cursoConcluido(catalogo, curso.id, concluidas, novosAprovados, dispensados)
+      ) {
+        setCursoConcluidoAgora(curso.id);
+      }
       if (correcao.aprovadoNestaTentativa) toast.success('Avaliação aprovada.');
       return correcao;
     } catch (err) {
@@ -383,6 +404,14 @@ export default function App() {
     try {
       const nivelamentoAtualizado = await dispensarModulo(moduleId);
       setNivelamento(nivelamentoAtualizado);
+      const curso = cursoDoModulo(catalogo, moduleId);
+      const novosDispensados = new Set(nivelamentoAtualizado.dispensados);
+      if (
+        !cursoConcluido(catalogo, curso.id, concluidas, aprovados, dispensados)
+        && cursoConcluido(catalogo, curso.id, concluidas, aprovados, novosDispensados)
+      ) {
+        setCursoConcluidoAgora(curso.id);
+      }
       toast.success('Módulo dispensado. O próximo foi liberado.');
     } catch (err) {
       tratarErro(err);
@@ -479,6 +508,8 @@ export default function App() {
             matriculas={matriculas}
             carregado={matriculasCarregadas && progressoCarregado && resultadosCarregados}
             concluidas={concluidas}
+            concluido={(courseId) => cursoConcluido(catalogo, courseId, concluidas, aprovados, dispensados)}
+            onVerMensagem={setCursoConcluidoAgora}
             onCategorySelect={handleCategorySelect}
             onVerNossosCursos={() => irPara('nossos-cursos', null)}
             liberado={liberado}
@@ -588,6 +619,7 @@ export default function App() {
   // APLICAÇÃO PRINCIPAL - Só renderiza se a guarda de rota for ultrapassada
   // =======================================================================
   const exercicioSelecionado = exercicios.find((exercicio) => exercicio.moduleId === exercicioAberto && exercicio.perguntas.length > 0);
+  const cursoFinalizado = catalogo.courses.find((curso) => curso.id === cursoConcluidoAgora);
 
   return (
     <div className='min-h-screen bg-white'>
@@ -617,6 +649,14 @@ export default function App() {
         onAdiar={() => setNivelamentoAdiado(true)}
         onEnviar={handleResponderNivelamento}
       />
+
+      {cursoFinalizado && (
+        <ConclusaoDialog
+          curso={cursoFinalizado}
+          aberto={true}
+          onFechar={() => setCursoConcluidoAgora(null)}
+        />
+      )}
 
       {/* Footer */}
       <Rodape />
