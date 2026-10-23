@@ -6,4 +6,6 @@ export interface Gabaritos {
 }
 
 // Chave: moduleId do exercício em shared/exercicios.ts.
-export const gabaritoDosExercicios: Gabaritos['exercicios'] = {};
+export const gabaritoDosExercicios: Gabaritos['exercicios'] = {
+  'modulo-1': [1, 3, 0, 2, 1, 3, 2, 0, 1, 3],
+};
