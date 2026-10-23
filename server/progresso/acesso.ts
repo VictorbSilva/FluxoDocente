@@ -10,7 +10,30 @@ const MENSAGENS: Record<AcessoNegado, string> = {
   modulo_bloqueado: 'Conclua o módulo anterior para liberar este.',
 };
 
-// O userId vem sempre de req.session.userId, nas rotas que chamam esta função.
+export interface EstadoDoProgresso {
+  concluidas: Set<string>;
+  aprovados: Set<string>;
+  dispensados: Set<string>;
+}
+
+// O userId vem sempre de req.session.userId, nas rotas que chamam estas funções.
+export async function lerEstadoDoProgresso(pool: pg.Pool, userId: string): Promise<EstadoDoProgresso> {
+  const [conclusoes, resultados, dispensas] = await Promise.all([
+    pool.query<{ lesson_id: string }>('SELECT lesson_id FROM lesson_completions WHERE user_id = $1', [userId]),
+    pool.query<{ module_id: string }>(
+      'SELECT module_id FROM exercise_results WHERE user_id = $1 AND aprovado_em IS NOT NULL',
+      [userId],
+    ),
+    pool.query<{ module_id: string }>('SELECT module_id FROM module_skips WHERE user_id = $1', [userId]),
+  ]);
+
+  return {
+    concluidas: new Set(conclusoes.rows.map((linha) => linha.lesson_id)),
+    aprovados: new Set(resultados.rows.map((linha) => linha.module_id)),
+    dispensados: new Set(dispensas.rows.map((linha) => linha.module_id)),
+  };
+}
+
 export async function verificarAcessoAoModulo(
   pool: pg.Pool,
   catalogo: Catalogo,
@@ -37,17 +60,9 @@ export async function verificarAcessoAoModulo(
     return null;
   }
 
-  const [conclusoes, resultados] = await Promise.all([
-    pool.query<{ lesson_id: string }>('SELECT lesson_id FROM lesson_completions WHERE user_id = $1', [userId]),
-    pool.query<{ module_id: string }>(
-      'SELECT module_id FROM exercise_results WHERE user_id = $1 AND aprovado_em IS NOT NULL',
-      [userId],
-    ),
-  ]);
-  const concluidas = new Set(conclusoes.rows.map((linha) => linha.lesson_id));
-  const aprovados = new Set(resultados.rows.map((linha) => linha.module_id));
+  const { concluidas, aprovados, dispensados } = await lerEstadoDoProgresso(pool, userId);
 
-  return moduloLiberado(catalogo, moduleId, concluidas, aprovados) ? null : 'modulo_bloqueado';
+  return moduloLiberado(catalogo, moduleId, concluidas, aprovados, dispensados) ? null : 'modulo_bloqueado';
 }
 
 export function responderAcessoNegado(res: express.Response, motivo: AcessoNegado): void {

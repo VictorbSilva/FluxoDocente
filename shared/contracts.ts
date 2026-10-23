@@ -44,6 +44,8 @@ export interface CorrecaoDTO {
 export interface NivelamentoDTO {
   disponivel: boolean;
   respondido: boolean;
+  dispensaveis: string[]; // moduleIds que o docente pode pular
+  dispensados: string[]; // moduleIds que o docente pulou
 }
 
 export interface ApiErrorBody {

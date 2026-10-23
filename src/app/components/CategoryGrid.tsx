@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardHeader, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -14,6 +15,9 @@ interface CategoryGridProps {
   liberado?: (moduleId: string) => boolean;
   resultados?: ReadonlyMap<string, ResultadoExercicioDTO>;
   onExercicio?: (moduleId: string) => void;
+  dispensavel?: (moduleId: string) => boolean;
+  dispensados?: ReadonlySet<string>;
+  onDispensar?: (moduleId: string) => Promise<void>;
 }
 
 export function CategoryGrid({
@@ -23,7 +27,11 @@ export function CategoryGrid({
   liberado,
   resultados,
   onExercicio,
+  dispensavel,
+  dispensados,
+  onDispensar,
 }: CategoryGridProps) {
+  const [confirmandoDispensa, setConfirmandoDispensa] = useState<string | null>(null);
   const modulos = moduleIds
     ? moduleIds.map((id) => modules.find((module) => module.id === id)).filter(Boolean)
     : modules;
@@ -90,6 +98,38 @@ export function CategoryGrid({
                       </Badge>
                     ))}
                   </div>
+
+                  {dispensados?.has(module.id) && (
+                    <Badge className='bg-[#e0faf6] text-[#177a7a]'>Dispensado pelo diagnóstico</Badge>
+                  )}
+
+                  {dispensavel?.(module.id) && onDispensar && (
+                    <div className='space-y-2'>
+                      <p className='text-sm text-gray-600'>
+                        Você acertou 4 ou mais questões deste módulo no diagnóstico.
+                      </p>
+                      {confirmandoDispensa === module.id ? (
+                        <>
+                          <p className='text-sm text-gray-600'>Pular não se desfaz. As aulas continuam abertas.</p>
+                          <div className='flex flex-wrap gap-2'>
+                            <Button onClick={() => {
+                              void onDispensar(module.id);
+                              setConfirmandoDispensa(null);
+                            }}>
+                              Confirmar
+                            </Button>
+                            <Button variant='ghost' onClick={() => setConfirmandoDispensa(null)}>
+                              Cancelar
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <Button variant='outline' className='w-full' onClick={() => setConfirmandoDispensa(module.id)}>
+                          Pular este módulo
+                        </Button>
+                      )}
+                    </div>
+                  )}
 
                   {bloqueado && (
                     <p className='flex items-center gap-2 text-sm text-gray-600'>

@@ -8,12 +8,18 @@ export function cursoDoModulo(catalogo: Catalogo, moduleId: string): Course | un
 }
 
 // Módulo sem aulas nunca fica completo. Exercício sem perguntas não conta.
+// Módulo dispensado pelo nivelamento conta como completo.
 export function moduloCompleto(
   catalogo: Catalogo,
   moduleId: string,
   concluidas: Conjunto,
   aprovados: Conjunto,
+  dispensados: Conjunto = new Set(),
 ): boolean {
+  if (dispensados.has(moduleId)) {
+    return true;
+  }
+
   const aulas = catalogo.lessons.filter((aula) => aula.moduleId === moduleId);
 
   if (aulas.length === 0 || !aulas.every((aula) => concluidas.has(aula.id))) {
@@ -32,6 +38,7 @@ export function moduloLiberado(
   moduleId: string,
   concluidas: Conjunto,
   aprovados: Conjunto,
+  dispensados: Conjunto = new Set(),
 ): boolean {
   const curso = cursoDoModulo(catalogo, moduleId);
 
@@ -45,7 +52,7 @@ export function moduloLiberado(
     return true;
   }
 
-  return moduloCompleto(catalogo, curso.moduleIds[posicao - 1], concluidas, aprovados);
+  return moduloCompleto(catalogo, curso.moduleIds[posicao - 1], concluidas, aprovados, dispensados);
 }
 
 export function cursoConcluido(
@@ -53,6 +60,7 @@ export function cursoConcluido(
   courseId: string,
   concluidas: Conjunto,
   aprovados: Conjunto,
+  dispensados: Conjunto = new Set(),
 ): boolean {
   const curso = catalogo.courses.find((c) => c.id === courseId);
 
@@ -60,5 +68,23 @@ export function cursoConcluido(
     return false;
   }
 
-  return curso.moduleIds.every((moduleId) => moduloCompleto(catalogo, moduleId, concluidas, aprovados));
+  return curso.moduleIds.every((moduleId) =>
+    moduloCompleto(catalogo, moduleId, concluidas, aprovados, dispensados),
+  );
+}
+
+// Dispensável com 80% ou mais de acertos nas perguntas do nivelamento sobre o módulo,
+// em conta inteira. Módulo sem perguntas no nivelamento não é dispensável.
+export function modulosDispensaveis(
+  catalogo: Catalogo,
+  respostas: readonly number[],
+  gabarito: readonly number[],
+): string[] {
+  return catalogo.modules
+    .map((modulo) => modulo.id)
+    .filter((moduleId) => {
+      const indices = catalogo.nivelamento.flatMap((pergunta, indice) => (pergunta.moduleId === moduleId ? [indice] : []));
+      const acertos = indices.filter((indice) => respostas[indice] === gabarito[indice]).length;
+      return indices.length > 0 && acertos * 5 >= indices.length * 4;
+    });
 }

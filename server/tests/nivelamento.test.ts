@@ -77,7 +77,7 @@ test('sem cookie, GET e POST do nivelamento devolvem 401', async () => {
   const get = await cliente.enviar('GET', '/api/me/nivelamento');
   assert.equal(get.status, 401);
 
-  const post = await cliente.enviar('POST', '/api/me/nivelamento', { corpo: { respostas: [0, 1, 2] } });
+  const post = await cliente.enviar('POST', '/api/me/nivelamento', { corpo: { respostas: [0, 1, 2, 0, 1, 2] } });
   assert.equal(post.status, 401);
 });
 
@@ -86,27 +86,27 @@ test('o nivelamento é respondido uma vez, sem exigir matrícula; a segunda vez 
 
   const antes = await cliente.enviar('GET', '/api/me/nivelamento', { cookie: cookieDeA });
   assert.equal(antes.status, 200);
-  assert.deepEqual(antes.corpo, { disponivel: true, respondido: false });
+  assert.deepEqual(antes.corpo, { disponivel: true, respondido: false, dispensaveis: [], dispensados: [] });
 
   const post = await cliente.enviar('POST', '/api/me/nivelamento', {
     cookie: cookieDeA,
-    corpo: { respostas: [0, 1, 2] },
+    corpo: { respostas: [0, 1, 2, 0, 1, 2] },
   });
   assert.equal(post.status, 201);
-  assert.deepEqual(post.corpo, { disponivel: true, respondido: true });
+  assert.deepEqual(post.corpo, { disponivel: true, respondido: true, dispensaveis: [], dispensados: [] });
 
   const depois = await cliente.enviar('GET', '/api/me/nivelamento', { cookie: cookieDeA });
-  assert.deepEqual(depois.corpo, { disponivel: true, respondido: true });
+  assert.deepEqual(depois.corpo, { disponivel: true, respondido: true, dispensaveis: [], dispensados: [] });
 
   const repetido = await cliente.enviar('POST', '/api/me/nivelamento', {
     cookie: cookieDeA,
-    corpo: { respostas: [2, 2, 2] },
+    corpo: { respostas: [2, 2, 2, 2, 2, 2] },
   });
   assert.equal(repetido.status, 409);
   assert.deepEqual(repetido.corpo, {
     error: { code: 'nivelamento_respondido', message: 'Você já respondeu ao nivelamento.' },
   });
-  assert.deepEqual((await respostaNoBanco(idDeA)).respostas, [0, 1, 2]);
+  assert.deepEqual((await respostaNoBanco(idDeA)).respostas, [0, 1, 2, 0, 1, 2]);
 });
 
 test('respostas inválidas devolvem 400 respostas_invalidas e nada é gravado', async () => {
@@ -114,12 +114,12 @@ test('respostas inválidas devolvem 400 respostas_invalidas e nada é gravado', 
   const corpos: unknown[] = [
     {},
     { respostas: null },
-    { respostas: [0, 1] },
-    { respostas: [0, 1, 2, 0] },
-    { respostas: [0, 1, 3] },
-    { respostas: [-1, 1, 2] },
-    { respostas: [0, 1.5, 2] },
-    { respostas: ['0', 1, 2] },
+    { respostas: [0, 1, 2, 0, 1] },
+    { respostas: [0, 1, 2, 0, 1, 2, 0] },
+    { respostas: [0, 1, 2, 0, 1, 3] },
+    { respostas: [-1, 1, 2, 0, 1, 2] },
+    { respostas: [0, 1.5, 2, 0, 1, 2] },
+    { respostas: ['0', 1, 2, 0, 1, 2] },
   ];
 
   for (const corpo of corpos) {
@@ -136,11 +136,11 @@ test('os acertos ficam no banco e nunca são devolvidos pela API', async () => {
 
   const post = await cliente.enviar('POST', '/api/me/nivelamento', {
     cookie: cookieDeA,
-    corpo: { respostas: [0, 1, 0] },
+    corpo: { respostas: [0, 1, 0, 1, 0, 1] },
   });
   const get = await cliente.enviar('GET', '/api/me/nivelamento', { cookie: cookieDeA });
 
-  assert.deepEqual(await respostaNoBanco(idDeA), { respostas: [0, 1, 0], acertos: 2, total: 3 });
+  assert.deepEqual(await respostaNoBanco(idDeA), { respostas: [0, 1, 0, 1, 0, 1], acertos: 3, total: 6 });
 
   for (const resposta of [post, get]) {
     assert.doesNotMatch(JSON.stringify(resposta.corpo), /acertos|respostas|gabarito/i);
@@ -153,21 +153,21 @@ test('com gabarito do nivelamento null, acertos fica nulo', async () => {
 
   const post = await cliente.enviar('POST', '/api/me/nivelamento', {
     cookie: cookieDeA,
-    corpo: { respostas: [0, 1, 2] },
+    corpo: { respostas: [0, 1, 2, 0, 1, 2] },
   });
 
   assert.equal(post.status, 201);
-  assert.deepEqual(post.corpo, { disponivel: true, respondido: true });
-  assert.deepEqual(await respostaNoBanco(idDeA), { respostas: [0, 1, 2], acertos: null, total: 3 });
+  assert.deepEqual(post.corpo, { disponivel: true, respondido: true, dispensaveis: [], dispensados: [] });
+  assert.deepEqual(await respostaNoBanco(idDeA), { respostas: [0, 1, 2, 0, 1, 2], acertos: null, total: 6 });
 });
 
 test('B continua sem ter respondido depois que A responde', async () => {
   const cliente = novoCliente(baseUrl);
 
-  await cliente.enviar('POST', '/api/me/nivelamento', { cookie: cookieDeA, corpo: { respostas: [0, 1, 2] } });
+  await cliente.enviar('POST', '/api/me/nivelamento', { cookie: cookieDeA, corpo: { respostas: [0, 1, 2, 0, 1, 2] } });
   const deB = await cliente.enviar('GET', '/api/me/nivelamento', { cookie: cookieDeB });
 
-  assert.deepEqual(deB.corpo, { disponivel: true, respondido: false });
+  assert.deepEqual(deB.corpo, { disponivel: true, respondido: false, dispensaveis: [], dispensados: [] });
 });
 
 test('sem perguntas no catálogo, o nivelamento fica indisponível', async () => {
@@ -176,7 +176,7 @@ test('sem perguntas no catálogo, o nivelamento fica indisponível', async () =>
 
   const get = await cliente.enviar('GET', '/api/me/nivelamento', { cookie: cookieDeA });
   assert.equal(get.status, 200);
-  assert.deepEqual(get.corpo, { disponivel: false, respondido: false });
+  assert.deepEqual(get.corpo, { disponivel: false, respondido: false, dispensaveis: [], dispensados: [] });
 
   const post = await cliente.enviar('POST', '/api/me/nivelamento', {
     cookie: cookieDeA,

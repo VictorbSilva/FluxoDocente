@@ -121,6 +121,13 @@ export function responderNivelamento(respostas: number[]): Promise<NivelamentoDT
   });
 }
 
+export function dispensarModulo(moduleId: string): Promise<NivelamentoDTO> {
+  return requisitar<NivelamentoDTO>(
+    '/me/dispensas/' + encodeURIComponent(moduleId),
+    { method: 'POST' },
+  );
+}
+
 export async function matriculas(): Promise<MatriculaDTO[]> {
   const { matriculas } = await requisitar<{ matriculas: MatriculaDTO[] }>('/me/matriculas');
   return matriculas;
