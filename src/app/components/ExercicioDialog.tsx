@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CorrecaoDTO, Exercicio, ResultadoExercicioDTO } from '../../../shared/contracts';
+import { ordemEmbaralhada } from '../lib/embaralhar';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -30,12 +31,16 @@ export function ExercicioDialog({
   const [respostas, setRespostas] = useState<(number | null)[]>(
     () => exercicio.perguntas.map(() => null),
   );
+  const [ordens, setOrdens] = useState<number[][]>(
+    () => exercicio.perguntas.map((pergunta) => ordemEmbaralhada(pergunta.alternativas.length)),
+  );
   const [correcao, setCorrecao] = useState<CorrecaoDTO | null>(null);
   const [enviando, setEnviando] = useState(false);
   const envioAtual = useRef(0);
 
   const limpar = () => {
     setRespostas(exercicio.perguntas.map(() => null));
+    setOrdens(exercicio.perguntas.map((pergunta) => ordemEmbaralhada(pergunta.alternativas.length)));
     setCorrecao(null);
     setEnviando(false);
   };
@@ -87,7 +92,7 @@ export function ExercicioDialog({
               <legend className='whitespace-pre-line'>
                 {indice + 1}. {pergunta.enunciado}
               </legend>
-              {pergunta.alternativas.map((alternativa, indiceAlternativa) => (
+              {ordens[indice].map((indiceAlternativa, posicao) => (
                 <label key={indiceAlternativa} className='flex items-start gap-2 text-sm text-gray-700'>
                   <input
                     type='radio'
@@ -99,7 +104,7 @@ export function ExercicioDialog({
                     )}
                     className='mt-1 shrink-0 accent-[#177a7a]'
                   />
-                  <span>{String.fromCharCode(65 + indiceAlternativa)}) {alternativa}</span>
+                  <span>{String.fromCharCode(65 + posicao)}) {pergunta.alternativas[indiceAlternativa]}</span>
                 </label>
               ))}
               {correcao && (

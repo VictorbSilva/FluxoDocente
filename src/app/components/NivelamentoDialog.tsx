@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { modules } from '../../../shared/catalog';
 import type { PerguntaDTO } from '../../../shared/contracts';
+import { ordemEmbaralhada } from '../lib/embaralhar';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -27,12 +28,16 @@ export function NivelamentoDialog({
   const [respostas, setRespostas] = useState<(number | null)[]>(
     () => perguntas.map(() => null),
   );
+  const [ordens, setOrdens] = useState<number[][]>(
+    () => perguntas.map((pergunta) => ordemEmbaralhada(pergunta.alternativas.length)),
+  );
   const [enviando, setEnviando] = useState(false);
   const envioAtual = useRef(0);
 
   useEffect(() => {
     envioAtual.current += 1;
     setRespostas(perguntas.map(() => null));
+    setOrdens(perguntas.map((pergunta) => ordemEmbaralhada(pergunta.alternativas.length)));
     setEnviando(false);
     return () => {
       envioAtual.current += 1;
@@ -74,7 +79,7 @@ export function NivelamentoDialog({
                 <legend className='whitespace-pre-line'>
                   {indice + 1}. {pergunta.enunciado}
                 </legend>
-                {pergunta.alternativas.map((alternativa, indiceAlternativa) => (
+                {ordens[indice].map((indiceAlternativa, posicao) => (
                   <label key={indiceAlternativa} className='flex items-start gap-2 text-sm text-gray-700'>
                     <input
                       type='radio'
@@ -86,7 +91,7 @@ export function NivelamentoDialog({
                       )}
                       className='mt-1 shrink-0 accent-[#177a7a]'
                     />
-                    <span>{String.fromCharCode(65 + indiceAlternativa)}) {alternativa}</span>
+                    <span>{String.fromCharCode(65 + posicao)}) {pergunta.alternativas[indiceAlternativa]}</span>
                   </label>
                 ))}
               </fieldset>
