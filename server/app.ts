@@ -2,10 +2,14 @@ import express from 'express';
 import helmet from 'helmet';
 import path from 'node:path';
 import type pg from 'pg';
+import type { Catalogo } from '../shared/contracts.js';
 import { criarRotasDeAnotacoes } from './anotacoes/rotas.js';
 import { criarRotasDeAuth } from './auth/rotas.js';
 import { criarExigirLogin, criarMiddlewareDeSessao } from './auth/sessao.js';
 import { criarRotasDeCursos } from './cursos/rotas.js';
+import type { Gabaritos } from './exercicios/gabarito.js';
+import { criarRotasDeExercicios } from './exercicios/rotas.js';
+import { criarRotasDoNivelamento } from './nivelamento/rotas.js';
 import { criarRotasDeProgresso } from './progresso/rotas.js';
 
 const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -14,9 +18,12 @@ export function createApp(opcoes: {
   production: boolean;
   pool: pg.Pool;
   sessionSecret: string;
-  lessonIds: ReadonlySet<string>;
+  catalogo: Catalogo;
+  gabaritos?: Gabaritos;
 }): express.Express {
   const app = express();
+  const { catalogo, gabaritos = { exercicios: {}, nivelamento: null } } = opcoes;
+  const aulas = new Map(catalogo.lessons.map((aula) => [aula.id, aula]));
 
   if (opcoes.production) {
     app.set('trust proxy', 1);
@@ -61,9 +68,11 @@ export function createApp(opcoes: {
   app.use(
     '/api/me',
     criarExigirLogin(opcoes.pool, opcoes.production),
-    criarRotasDeProgresso(opcoes.pool, opcoes.lessonIds),
-    criarRotasDeAnotacoes(opcoes.pool, opcoes.lessonIds),
-    criarRotasDeCursos(opcoes.pool),
+    criarRotasDeProgresso(opcoes.pool, catalogo, aulas),
+    criarRotasDeAnotacoes(opcoes.pool, catalogo, aulas),
+    criarRotasDeCursos(opcoes.pool, catalogo),
+    criarRotasDeExercicios(opcoes.pool, catalogo, gabaritos),
+    criarRotasDoNivelamento(opcoes.pool, catalogo, gabaritos),
   );
 
   app.use('/api', (_req, res) => {

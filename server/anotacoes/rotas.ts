@@ -1,21 +1,35 @@
 import express from 'express';
 import type pg from 'pg';
-import type { NoteDTO } from '../../shared/contracts.js';
+import type { Catalogo, Lesson, NoteDTO } from '../../shared/contracts.js';
+import { responderAcessoNegado, verificarAcessoAoModulo } from '../progresso/acesso.js';
 
 const LIMITE_DE_CARACTERES = 5000;
 
 // Montado depois de exigirLogin. O dono da anotação é sempre req.session.userId:
 // nenhum userId do corpo, da query ou do caminho é lido.
-export function criarRotasDeAnotacoes(pool: pg.Pool, lessonIds: ReadonlySet<string>): express.Router {
+export function criarRotasDeAnotacoes(
+  pool: pg.Pool,
+  catalogo: Catalogo,
+  aulas: ReadonlyMap<string, Lesson>,
+): express.Router {
   const router = express.Router();
 
   router.get('/notes/:lessonId', async (req, res) => {
     const { lessonId } = req.params;
+    const aula = aulas.get(lessonId);
 
-    if (!lessonIds.has(lessonId)) {
+    if (!aula) {
       res.status(404).json({
         error: { code: 'aula_inexistente', message: 'Aula não encontrada.' },
       });
+      return;
+    }
+
+    // Anotar exige matrícula, mas não exige módulo liberado.
+    const motivo = await verificarAcessoAoModulo(pool, catalogo, req.session.userId!, aula.moduleId, false);
+
+    if (motivo) {
+      responderAcessoNegado(res, motivo);
       return;
     }
 
@@ -33,11 +47,20 @@ export function criarRotasDeAnotacoes(pool: pg.Pool, lessonIds: ReadonlySet<stri
   // Conteúdo vazio ou só com espaços apaga a anotação. O texto é gravado como veio.
   router.put('/notes/:lessonId', async (req, res) => {
     const { lessonId } = req.params;
+    const aula = aulas.get(lessonId);
 
-    if (!lessonIds.has(lessonId)) {
+    if (!aula) {
       res.status(404).json({
         error: { code: 'aula_inexistente', message: 'Aula não encontrada.' },
       });
+      return;
+    }
+
+    // Anotar exige matrícula, mas não exige módulo liberado.
+    const motivo = await verificarAcessoAoModulo(pool, catalogo, req.session.userId!, aula.moduleId, false);
+
+    if (motivo) {
+      responderAcessoNegado(res, motivo);
       return;
     }
 

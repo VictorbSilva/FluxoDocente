@@ -1,4 +1,6 @@
-import type { Course, Module, Lesson } from './contracts.js';
+import type { Catalogo, Course, Module, Lesson } from './contracts.js';
+import { exercicios } from './exercicios.js';
+import { perguntasDoNivelamento } from './nivelamento.js';
 
 export const courses: Course[] = [
   {
@@ -177,3 +179,5 @@ export const lessons: Lesson[] = [
 
 export const lessonIds: ReadonlySet<string> = new Set(lessons.map((l) => l.id));
 export const courseIds: ReadonlySet<string> = new Set(courses.map((c) => c.id));
+
+export const catalogo: Catalogo = { courses, modules, lessons, exercicios, nivelamento: perguntasDoNivelamento };

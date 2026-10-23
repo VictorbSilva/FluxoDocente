@@ -24,6 +24,28 @@ export interface MatriculaDTO {
   enrolledAt: string; // ISO 8601
 }
 
+export interface ResultadoExercicioDTO {
+  moduleId: string;
+  melhorAcertos: number;
+  total: number;
+  aprovado: boolean;
+  aprovadoEm: string | null; // ISO 8601; null enquanto não aprovado
+}
+
+export interface CorrecaoDTO {
+  moduleId: string;
+  acertos: number;
+  total: number;
+  corretas: boolean[];
+  aprovadoNestaTentativa: boolean;
+  resultado: ResultadoExercicioDTO;
+}
+
+export interface NivelamentoDTO {
+  disponivel: boolean;
+  respondido: boolean;
+}
+
 export interface ApiErrorBody {
   error: { code: string; message: string };
 }
@@ -55,4 +77,25 @@ export interface Lesson {
   duration?: string;
   durationSeconds?: number;
   tags?: string[];
+}
+
+export interface PerguntaDTO {
+  id: string;
+  enunciado: string;
+  alternativas: string[];
+}
+
+// Sem gabarito: ele nunca fica em shared/.
+export interface Exercicio {
+  moduleId: string;
+  instrucoes?: string; // texto mostrado antes das questões da Avaliação
+  perguntas: PerguntaDTO[];
+}
+
+export interface Catalogo {
+  courses: Course[];
+  modules: Module[];
+  lessons: Lesson[];
+  exercicios: Exercicio[];
+  nivelamento: PerguntaDTO[];
 }
