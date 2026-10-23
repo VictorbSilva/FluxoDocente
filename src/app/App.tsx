@@ -13,12 +13,14 @@ import { NossosCursos } from './components/NossosCursos';
 import { MeusCertificados } from './components/MeusCertificados';
 import { AulaIndisponivel } from './components/AulaIndisponivel';
 import { ExercicioDialog } from './components/ExercicioDialog';
+import { NivelamentoDialog } from './components/NivelamentoDialog';
 import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
 import { catalogo, modules, lessons } from '../../shared/catalog';
 import { exercicios } from '../../shared/exercicios';
+import { perguntasDoNivelamento } from '../../shared/nivelamento';
 import { cursoDoModulo, moduloLiberado } from '../../shared/progressao';
-import type { CorrecaoDTO, MatriculaDTO, ResultadoExercicioDTO, UserDTO } from '../../shared/contracts';
+import type { CorrecaoDTO, MatriculaDTO, NivelamentoDTO, ResultadoExercicioDTO, UserDTO } from '../../shared/contracts';
 import {
   ApiError,
   concluirAula,
@@ -26,7 +28,9 @@ import {
   enviarExercicio,
   matriculas as consultarMatriculas,
   matricular,
+  nivelamento as consultarNivelamento,
   progresso,
+  responderNivelamento,
   resultadosDosExercicios,
   sair,
   salvarPerfil,
@@ -59,6 +63,8 @@ export default function App() {
   );
   const [resultadosCarregados, setResultadosCarregados] = useState(false);
   const [exercicioAberto, setExercicioAberto] = useState<string | null>(null);
+  const [nivelamento, setNivelamento] = useState<NivelamentoDTO | null>(null);
+  const [nivelamentoAdiado, setNivelamentoAdiado] = useState(false);
   const aprovados = new Set(
     [...resultados.values()].filter((resultado) => resultado.aprovado).map((resultado) => resultado.moduleId),
   );
@@ -153,6 +159,8 @@ export default function App() {
       setResultados(new Map());
       setResultadosCarregados(false);
       setExercicioAberto(null);
+      setNivelamento(null);
+      setNivelamentoAdiado(false);
       toast.info('Sua sessão expirou. Entre novamente.');
     } else {
       toast.error(err.message);
@@ -229,6 +237,27 @@ export default function App() {
     };
   }, [usuarioId]);
 
+  useEffect(() => {
+    setNivelamento(null);
+    setNivelamentoAdiado(false);
+    if (!usuarioId) return;
+
+    let cancelado = false;
+    consultarNivelamento()
+      .then((nivelamento) => {
+        if (cancelado) return;
+        setNivelamento(nivelamento);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        tratarErro(err);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [usuarioId]);
+
   const handleLogin = async (email: string, senha: string) => {
     const usuario = await entrar(email, senha);
     setSessao({ estado: 'autenticada', usuario });
@@ -263,6 +292,8 @@ export default function App() {
     setResultados(new Map());
     setResultadosCarregados(false);
     setExercicioAberto(null);
+    setNivelamento(null);
+    setNivelamentoAdiado(false);
     history.replaceState(null, '', '/');
     setCurrentSection('home');
     setSelectedLessonId(null);
@@ -331,6 +362,22 @@ export default function App() {
     } catch (err) {
       tratarErro(err);
       return null;
+    }
+  };
+
+  const handleResponderNivelamento = async (respostas: number[]): Promise<boolean> => {
+    try {
+      const nivelamentoRespondido = await responderNivelamento(respostas);
+      setNivelamento(nivelamentoRespondido);
+      toast.success('Obrigado! Suas respostas foram registradas.');
+      return true;
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'nivelamento_respondido') {
+        setNivelamento((anterior) => anterior ? { ...anterior, respondido: true } : anterior);
+        return true;
+      }
+      tratarErro(err);
+      return false;
     }
   };
 
@@ -520,6 +567,13 @@ export default function App() {
           onEnviar={(respostas) => handleEnviarExercicio(exercicioAberto, respostas)}
         />
       )}
+
+      <NivelamentoDialog
+        perguntas={perguntasDoNivelamento}
+        aberto={Boolean(nivelamento?.disponivel && !nivelamento.respondido && !nivelamentoAdiado)}
+        onAdiar={() => setNivelamentoAdiado(true)}
+        onEnviar={handleResponderNivelamento}
+      />
 
       {/* Footer */}
       <Rodape />

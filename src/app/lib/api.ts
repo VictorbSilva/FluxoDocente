@@ -3,6 +3,7 @@ import type {
   CompletionDTO,
   CorrecaoDTO,
   MatriculaDTO,
+  NivelamentoDTO,
   NoteDTO,
   ProgressDTO,
   ResultadoExercicioDTO,
@@ -107,6 +108,17 @@ export function enviarExercicio(moduleId: string, respostas: number[]): Promise<
     '/me/exercicios/' + encodeURIComponent(moduleId),
     { method: 'POST', body: { respostas } },
   );
+}
+
+export function nivelamento(): Promise<NivelamentoDTO> {
+  return requisitar<NivelamentoDTO>('/me/nivelamento');
+}
+
+export function responderNivelamento(respostas: number[]): Promise<NivelamentoDTO> {
+  return requisitar<NivelamentoDTO>('/me/nivelamento', {
+    method: 'POST',
+    body: { respostas },
+  });
 }
 
 export async function matriculas(): Promise<MatriculaDTO[]> {
