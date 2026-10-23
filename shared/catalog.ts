@@ -19,6 +19,7 @@ export const modules: Module[] = [
     title: 'Módulo 1: Engenharia de Prompt',
     description:
       'Capacitação em Engenharia de Prompts para validação de informações essenciais.',
+    exerciseMinutes: 15,
     color: 'from-[#13c8b5] to-[#21a3a3]',
     tags: ['Gemini', 'ChatGPT', 'Claude', 'Perplexity', 'Consensus'],
   },

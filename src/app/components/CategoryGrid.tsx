@@ -1,20 +1,28 @@
 import { Card, CardHeader, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Play, Clock } from 'lucide-react';
+import { Play, Clock, Lock } from 'lucide-react';
 import { modules, lessons } from '../../../shared/catalog';
+import { exercicios } from '../../../shared/exercicios';
+import type { ResultadoExercicioDTO } from '../../../shared/contracts';
 import { duracaoDoModuloEmSegundos, formatarDuracao } from '../../../shared/duracao';
 
 interface CategoryGridProps {
   onCategorySelect: (categoryId: string) => void;
   moduleIds?: string[];
   mostrarTitulo?: boolean;
+  liberado?: (moduleId: string) => boolean;
+  resultados?: ReadonlyMap<string, ResultadoExercicioDTO>;
+  onExercicio?: (moduleId: string) => void;
 }
 
 export function CategoryGrid({
   onCategorySelect,
   moduleIds,
   mostrarTitulo = true,
+  liberado,
+  resultados,
+  onExercicio,
 }: CategoryGridProps) {
   const modulos = moduleIds
     ? moduleIds.map((id) => modules.find((module) => module.id === id)).filter(Boolean)
@@ -38,6 +46,9 @@ export function CategoryGrid({
           {modulos.map((module) => {
             const total = lessons.filter((l) => l.moduleId === module.id).length;
             const duracao = formatarDuracao(duracaoDoModuloEmSegundos(module.id));
+            const bloqueado = liberado ? !liberado(module.id) : false;
+            const temExercicio = exercicios.some((exercicio) => exercicio.moduleId === module.id && exercicio.perguntas.length > 0);
+            const resultado = resultados?.get(module.id);
 
             return (
               <Card
@@ -80,14 +91,31 @@ export function CategoryGrid({
                     ))}
                   </div>
 
+                  {bloqueado && (
+                    <p className='flex items-center gap-2 text-sm text-gray-600'>
+                      <Lock className='h-4 w-4 shrink-0' aria-hidden='true' />
+                      Conclua o módulo anterior para liberar.
+                    </p>
+                  )}
+
                   <Button
                     onClick={() => onCategorySelect(module.id)}
-                    disabled={total === 0}
+                    disabled={bloqueado || total === 0}
                     className='w-full mt-4 bg-gradient-to-r bg-[#177a7a] hover:bg-[#136d6d]'
                   >
                     <Play className='h-4 w-4 mr-2' />
-                    {total === 0 ? 'Aulas em breve' : 'Começar módulo'}
+                    {bloqueado ? 'Bloqueado' : total === 0 ? 'Aulas em breve' : 'Começar módulo'}
                   </Button>
+                  {!bloqueado && temExercicio && onExercicio && (
+                    <div className='space-y-2'>
+                      <Button variant='outline' className='w-full' onClick={() => onExercicio(module.id)}>
+                        {resultado ? 'Refazer avaliação' : 'Fazer avaliação'}
+                      </Button>
+                      {resultado?.aprovado && (
+                        <Badge className='bg-[#e0faf6] text-[#177a7a]'>Avaliação aprovada</Badge>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

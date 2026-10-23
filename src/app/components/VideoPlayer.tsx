@@ -3,9 +3,10 @@ import { toast } from 'sonner';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Award, CheckCircle, ChevronDown, Clock, Users } from 'lucide-react';
+import { Award, CheckCircle, ChevronDown, Clock, Lock, Users } from 'lucide-react';
 import { modules, lessons } from '../../../shared/catalog';
-import type { Lesson, Module } from '../../../shared/contracts';
+import { exercicios } from '../../../shared/exercicios';
+import type { Lesson, Module, ResultadoExercicioDTO } from '../../../shared/contracts';
 import { anotacao, salvarAnotacao } from '../lib/api';
 
 export const PERGUNTA_SAIR_SEM_SALVAR =
@@ -20,6 +21,9 @@ interface VideoPlayerProps {
   onConcluir: (lessonId: string) => Promise<void>;
   onAlteracoesPendentes: (pendente: boolean) => void;
   onErro: (err: unknown) => void;
+  liberado: (moduleId: string) => boolean;
+  resultados: ReadonlyMap<string, ResultadoExercicioDTO>;
+  onAbrirExercicio: (moduleId: string) => void;
 }
 
 export function VideoPlayer({
@@ -31,6 +35,9 @@ export function VideoPlayer({
   onConcluir,
   onAlteracoesPendentes,
   onErro,
+  liberado,
+  resultados,
+  onAbrirExercicio,
 }: VideoPlayerProps) {
   const [salvando, setSalvando] = useState(false);
   const [abertos, setAbertos] = useState<Set<string>>(() => new Set());
@@ -175,7 +182,7 @@ export function VideoPlayer({
               variant='outline'
               className='flex-1'
               onClick={() => trocarDeAula(proxima.id)}
-              disabled={!proxima}
+              disabled={!proxima || !liberado(proxima.moduleId)}
             >
               Próxima aula
             </Button>
@@ -294,6 +301,10 @@ export function VideoPlayer({
                 const aulas = lessons.filter((l) => l.moduleId === m.id);
                 const feitas = aulas.filter((l) => concluidas.has(l.id)).length;
                 const aberto = abertos.has(m.id);
+                const bloqueado = !liberado(m.id);
+                const resultado = resultados.get(m.id);
+                const avaliacaoVisivel = exercicios.some((exercicio) => exercicio.moduleId === m.id && exercicio.perguntas.length > 0)
+                  && (aberto || m.id === lesson.moduleId);
                 const listaId = 'aulas-' + m.id;
                 const visiveis = aberto
                   ? aulas
@@ -313,7 +324,12 @@ export function VideoPlayer({
                         <span className='block text-sm text-gray-900'>
                           {m.title}
                         </span>
-                        {aulas.length === 0 ? (
+                        {bloqueado ? (
+                          <span className='flex items-center gap-1 text-xs text-gray-500 mt-1'>
+                            <Lock className='h-3 w-3' aria-hidden='true' />
+                            Bloqueado
+                          </span>
+                        ) : aulas.length === 0 ? (
                           <span className='block text-xs text-gray-500 mt-1'>
                             Aulas em breve
                           </span>
@@ -335,7 +351,7 @@ export function VideoPlayer({
 
                     <ul
                       id={listaId}
-                      hidden={visiveis.length === 0}
+                      hidden={visiveis.length === 0 && !avaliacaoVisivel}
                       className='mt-1 pl-3 space-y-1'
                     >
                       {visiveis.map((l) => (
@@ -343,8 +359,9 @@ export function VideoPlayer({
                           <button
                             type='button'
                             onClick={() => trocarDeAula(l.id)}
+                            disabled={bloqueado}
                             aria-current={l.id === lesson.id ? 'true' : undefined}
-                            className={`w-full p-2 rounded-lg text-left ${
+                            className={`w-full p-2 rounded-lg text-left disabled:cursor-not-allowed disabled:opacity-50 ${
                               l.id === lesson.id
                                 ? 'bg-[#e0faf6]'
                                 : 'hover:bg-gray-50'
@@ -372,6 +389,25 @@ export function VideoPlayer({
                           </button>
                         </li>
                       ))}
+                      {avaliacaoVisivel && (
+                        <li>
+                          <button
+                            type='button'
+                            disabled={bloqueado}
+                            onClick={() => onAbrirExercicio(m.id)}
+                            className='w-full p-2 rounded-lg text-left hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50'
+                          >
+                            <span className='block text-sm text-gray-900'>Avaliação do módulo</span>
+                            <span className='block text-xs text-[#177a7a] mt-1'>
+                              {resultado?.aprovado
+                                ? 'Aprovado'
+                                : resultado
+                                  ? `Melhor nota: ${resultado.melhorAcertos} de ${resultado.total}`
+                                  : 'Ainda não feita'}
+                            </span>
+                          </button>
+                        </li>
+                      )}
                     </ul>
                   </div>
                 );
