@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cursoConcluido, moduloCompleto, moduloLiberado } from '../../shared/progressao.js';
-import { catalogoDeTeste } from './catalogo-de-teste.js';
+import { cursoConcluido, moduloCompleto, moduloLiberado, modulosDispensaveis } from '../../shared/progressao.js';
+import { catalogoDeTeste, gabaritoDeTeste } from './catalogo-de-teste.js';
 
 const nada = new Set<string>();
 
@@ -46,4 +46,18 @@ test('aceita Map no lugar de Set', () => {
   const concluidas = new Map([['aula-teste-1', true], ['aula-teste-2', true]]);
 
   assert.equal(moduloLiberado(catalogoDeTeste, 'mod-b', concluidas, new Map()), true);
+});
+
+test("'mod-b' dispensado libera 'mod-c' sem a aula 3 nem a aprovação", () => {
+  const concluidas = new Set(['aula-teste-1', 'aula-teste-2']);
+
+  assert.equal(moduloLiberado(catalogoDeTeste, 'mod-c', concluidas, nada), false);
+  assert.equal(moduloLiberado(catalogoDeTeste, 'mod-c', concluidas, nada, new Set(['mod-b'])), true);
+});
+
+test("'mod-b' é dispensável com 4 de 5 acertos e não com 3", () => {
+  const gabarito = gabaritoDeTeste.nivelamento!;
+
+  assert.deepEqual(modulosDispensaveis(catalogoDeTeste, [0, 0, 0, 0, 1, 1], gabarito), ['mod-b']);
+  assert.deepEqual(modulosDispensaveis(catalogoDeTeste, [0, 0, 0, 1, 1, 1], gabarito), []);
 });

@@ -14,6 +14,7 @@ function perguntas(prefixo: string, quantidade: number): PerguntaDTO[] {
 }
 
 // 'mod-a' sem exercício, 'mod-b' com exercício, 'mod-c' sem exercício e 'mod-d' sem aulas.
+// No nivelamento, 'n01' a 'n05' avaliam 'mod-b' e 'n06' avalia 'mod-c'.
 export const catalogoDeTeste: Catalogo = {
   courses: [
     { id: 'curso-teste', title: 'Curso de teste', description: 'Curso de teste.', moduleIds: ['mod-a', 'mod-b', 'mod-c', 'mod-d'] },
@@ -28,13 +29,13 @@ export const catalogoDeTeste: Catalogo = {
     { id: 'aula-outro-1', moduleId: 'mod-x', youtubeId: 'xxxxxxxxxx1', title: 'Aula do outro curso' },
   ],
   exercicios: [{ moduleId: 'mod-b', perguntas: perguntas('b', 10) }],
-  nivelamento: perguntas('n', 3),
+  nivelamento: perguntas('n', 6).map((pergunta, indice) => ({ ...pergunta, moduleId: indice < 5 ? 'mod-b' : 'mod-c' })),
 };
 
-// A alternativa certa de todas as perguntas de 'mod-b' é a primeira.
+// A alternativa certa de todas as perguntas, do exercício e do nivelamento, é a primeira.
 export const gabaritoDeTeste: Gabaritos = {
   exercicios: { 'mod-b': Array(10).fill(0) },
-  nivelamento: [0, 1, 2],
+  nivelamento: [0, 0, 0, 0, 0, 0],
 };
 
 export async function matricular(pool: pg.Pool, userId: string, courseId = 'curso-teste'): Promise<void> {
