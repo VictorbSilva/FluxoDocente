@@ -34,7 +34,7 @@ export function NossosCursos({
   return (
     <section className='py-12 md:py-16 bg-white'>
       <div className='max-w-7xl mx-auto px-4'>
-        <h2 className='text-2xl md:text-3xl text-gray-900 mb-4'>Nossos cursos</h2>
+        <h2 className='text-2xl md:text-3xl text-gray-900 mb-4'>Mais cursos</h2>
         <p className='text-lg text-gray-600 mb-6'>
           Escolha um curso e faça sua matrícula para acompanhar seu progresso.
         </p>

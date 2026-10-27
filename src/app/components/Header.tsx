@@ -17,7 +17,7 @@ export function Header({
   const navItems = [
     { id: 'home', label: 'Início' },
     { id: 'meus-cursos', label: 'Meus cursos' },
-    { id: 'nossos-cursos', label: 'Nossos cursos' },
+    { id: 'mais-cursos', label: 'Mais cursos' },
     { id: 'certificados', label: 'Meus certificados' },
     { id: 'sobre', label: 'Sobre nós' },
   ];

@@ -57,7 +57,7 @@ export function MeusCursos({
           <Card className='p-6 items-start'>
             <p className='text-gray-600'>Você ainda não está matriculado em nenhum curso.</p>
             <Button onClick={onVerNossosCursos} className='bg-[#177a7a] hover:bg-[#136d6d]'>
-              Ver nossos cursos
+              Ver mais cursos
             </Button>
           </Card>
         ) : (

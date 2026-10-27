@@ -1,10 +1,10 @@
 import { lessonIds } from '../../../shared/catalog';
 
-export type Secao = 'home' | 'meus-cursos' | 'nossos-cursos' | 'certificados' | 'sobre' | 'entrar';
+export type Secao = 'home' | 'meus-cursos' | 'mais-cursos' | 'certificados' | 'sobre' | 'entrar';
 
 export const SECOES_PRIVADAS: ReadonlySet<string> = new Set([
   'meus-cursos',
-  'nossos-cursos',
+  'mais-cursos',
   'certificados',
 ]);
 
@@ -22,7 +22,7 @@ export function lerRota(pathname: string): Rota {
   if (pathname === '/meus-cursos' || pathname === '/cursos') {
     return { section: 'meus-cursos', lessonId: null };
   }
-  if (pathname === '/nossos-cursos') return { section: 'nossos-cursos', lessonId: null };
+  if (pathname === '/mais-cursos' || pathname === '/nossos-cursos') return { section: 'mais-cursos', lessonId: null };
   if (pathname === '/certificados') return { section: 'certificados', lessonId: null };
   if (pathname === '/sobre') return { section: 'sobre', lessonId: null };
   if (pathname === '/progresso') return { section: 'home', lessonId: null };
@@ -44,7 +44,7 @@ export function caminhoDe(section: string, lessonId: string | null): string {
   if (lessonId) return PREFIXO_AULA + encodeURIComponent(lessonId);
   if (section === 'entrar') return '/entrar';
   if (section === 'meus-cursos') return '/meus-cursos';
-  if (section === 'nossos-cursos') return '/nossos-cursos';
+  if (section === 'mais-cursos') return '/mais-cursos';
   if (section === 'certificados') return '/certificados';
   if (section === 'sobre') return '/sobre';
   return '/';
