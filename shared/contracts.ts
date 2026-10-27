@@ -66,7 +66,6 @@ export interface Course {
   title: string;
   description: string;
   moduleIds: string[];
-  closingYoutubeId?: string;
 }
 
 export interface Module {

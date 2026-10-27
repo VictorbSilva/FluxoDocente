@@ -86,14 +86,6 @@ test('exerciseMinutes dos módulos, quando existe, é inteiro positivo', () => {
   }
 });
 
-test('vídeo de encerramento do curso, quando existe, tem o formato de ID do YouTube', () => {
-  for (const curso of courses) {
-    if (curso.closingYoutubeId !== undefined) {
-      assert.match(curso.closingYoutubeId, /^[A-Za-z0-9_-]{11}$/);
-    }
-  }
-});
-
 test('todo exercício aponta para um módulo existente', () => {
   const moduleIds = new Set(modules.map((modulo) => modulo.id));
 
