@@ -641,7 +641,17 @@ export default function App() {
           <CategoryGrid onCategorySelect={() => irPara('entrar', null)} />
           <SobreNos />
         </main>
-        <Rodape />
+        <Rodape
+          autenticado={false}
+          onSectionChange={(section) => {
+            if (section === 'sobre') {
+              document.getElementById('sobre')?.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              handleSectionChange(section);
+              if (section === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+        />
         {toaster}
       </div>
     );
@@ -703,7 +713,7 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <Rodape />
+      <Rodape autenticado={true} onSectionChange={handleSectionChange} />
 
       {toaster}
     </div>

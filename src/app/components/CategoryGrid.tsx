@@ -73,7 +73,7 @@ export function CategoryGrid({
                   </h3>
                 </CardHeader>
 
-                <CardContent className='space-y-4'>
+                <CardContent className='flex flex-1 flex-col gap-4'>
                   <p className='text-sm text-gray-600 leading-relaxed'>
                     {module.description}
                   </p>
@@ -138,24 +138,29 @@ export function CategoryGrid({
                     </p>
                   )}
 
-                  <Button
-                    onClick={() => onCategorySelect(module.id)}
-                    disabled={bloqueado || total === 0}
-                    className='w-full mt-4 bg-gradient-to-r bg-[#177a7a] hover:bg-[#136d6d]'
-                  >
-                    <Play className='h-4 w-4 mr-2' />
-                    {bloqueado ? 'Bloqueado' : total === 0 ? 'Aulas em breve' : 'Começar módulo'}
-                  </Button>
-                  {!bloqueado && temExercicio && onExercicio && (
-                    <div className='space-y-2'>
-                      <Button variant='outline' className='w-full' onClick={() => onExercicio(module.id)}>
-                        {resultado ? 'Refazer avaliação' : 'Fazer avaliação'}
-                      </Button>
-                      {resultado?.aprovado && (
-                        <Badge className='bg-[#e0faf6] text-[#177a7a]'>Avaliação aprovada</Badge>
-                      )}
-                    </div>
+                  {!bloqueado && temExercicio && onExercicio && resultado?.aprovado && (
+                    <Badge className='self-start bg-[#e0faf6] text-[#177a7a]'>Avaliação aprovada</Badge>
                   )}
+
+                  <div className='mt-auto space-y-4 pt-4'>
+                    <Button
+                      onClick={() => onCategorySelect(module.id)}
+                      disabled={bloqueado || total === 0}
+                      className='w-full bg-gradient-to-r bg-[#177a7a] hover:bg-[#136d6d]'
+                    >
+                      <Play className='h-4 w-4 mr-2' />
+                      {bloqueado ? 'Bloqueado' : total === 0 ? 'Aulas em breve' : 'Começar módulo'}
+                    </Button>
+                    {onExercicio && (
+                      <div className='min-h-9'>
+                        {!bloqueado && temExercicio && (
+                          <Button variant='outline' className='w-full' onClick={() => onExercicio(module.id)}>
+                            {resultado ? 'Refazer avaliação' : 'Fazer avaliação'}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             );

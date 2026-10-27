@@ -18,7 +18,7 @@ export const modules: Module[] = [
     title: 'Introdução',
     description: 'Apresentação da plataforma Fluxo Docente.',
     color: 'from-[#2b364a] to-[#177a7a]',
-    tags: [],
+    tags: ['Apresentação', 'Plataforma'],
   },
   {
     id: 'modulo-1',
@@ -43,7 +43,7 @@ export const modules: Module[] = [
     description: 'Geração ágil de exercícios, provas e feedbacks.',
     exerciseMinutes: 15,
     color: 'from-[#177a7a] to-[#21a3a3]',
-    tags: [],
+    tags: ['Exercícios', 'Provas', 'Feedback'],
   },
   {
     id: 'modulo-4',
@@ -59,7 +59,7 @@ export const modules: Module[] = [
     title: 'Encerramento',
     description: 'Mensagem de encerramento da equipe.',
     color: 'from-[#177a7a] to-[#2b364a]',
-    tags: [],
+    tags: ['Finalização', 'Mensagem da equipe'],
   },
 ];
 
