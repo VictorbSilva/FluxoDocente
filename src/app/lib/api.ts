@@ -121,6 +121,10 @@ export function responderNivelamento(respostas: number[]): Promise<NivelamentoDT
   });
 }
 
+export function recusarNivelamento(): Promise<NivelamentoDTO> {
+  return requisitar<NivelamentoDTO>('/me/nivelamento/recusa', { method: 'POST' });
+}
+
 export function dispensarModulo(moduleId: string): Promise<NivelamentoDTO> {
   return requisitar<NivelamentoDTO>(
     '/me/dispensas/' + encodeURIComponent(moduleId),

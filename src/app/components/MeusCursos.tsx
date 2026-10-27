@@ -4,9 +4,9 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { CategoryGrid } from './CategoryGrid';
-import { courses, lessons, modules } from '../../../shared/catalog';
+import { courses, lessons } from '../../../shared/catalog';
 import { duracaoDoCursoEmSegundos, formatarDuracao } from '../../../shared/duracao';
-import type { MatriculaDTO, NivelamentoDTO, ResultadoExercicioDTO } from '../../../shared/contracts';
+import type { MatriculaDTO, ResultadoExercicioDTO } from '../../../shared/contracts';
 
 interface MeusCursosProps {
   matriculas: MatriculaDTO[];
@@ -19,8 +19,6 @@ interface MeusCursosProps {
   liberado: (moduleId: string) => boolean;
   resultados: ReadonlyMap<string, ResultadoExercicioDTO>;
   onExercicio: (moduleId: string) => void;
-  nivelamento: NivelamentoDTO | null;
-  onResponderNivelamento: () => void;
   dispensavel: (moduleId: string) => boolean;
   dispensados: ReadonlySet<string>;
   onDispensar: (moduleId: string) => Promise<void>;
@@ -37,8 +35,6 @@ export function MeusCursos({
   liberado,
   resultados,
   onExercicio,
-  nivelamento,
-  onResponderNivelamento,
   dispensavel,
   dispensados,
   onDispensar,
@@ -67,11 +63,6 @@ export function MeusCursos({
             const feitas = aulas.filter((l) => concluidas.has(l.id)).length;
             const duracao = formatarDuracao(duracaoDoCursoEmSegundos(curso.id));
             const finalizado = concluido(curso.id);
-            const modulosDispensaveis = modules.filter((modulo) =>
-              curso.moduleIds.includes(modulo.id)
-              && nivelamento?.dispensaveis.includes(modulo.id)
-              && !dispensados.has(modulo.id),
-            );
 
             return (
               <div key={curso.id}>
@@ -105,28 +96,6 @@ export function MeusCursos({
                     </Button>
                   )}
                 </Card>
-                {nivelamento?.disponivel && (
-                  <Card className='p-6 mt-6 items-start'>
-                    <h3 className='text-xl text-gray-900'>Módulo 0: Questionário diagnóstico</h3>
-                    {nivelamento.respondido ? (
-                      <>
-                        <Badge className='bg-[#e0faf6] text-[#177a7a]'>Respondido</Badge>
-                        {modulosDispensaveis.length > 0 && (
-                          <p className='text-gray-600'>
-                            Você pode pular: {modulosDispensaveis.map((modulo) => modulo.title).join(', ')}
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <p className='text-gray-600'>Responda para saber se pode pular algum módulo.</p>
-                        <Button onClick={onResponderNivelamento} className='bg-[#177a7a] hover:bg-[#136d6d]'>
-                          Responder agora
-                        </Button>
-                      </>
-                    )}
-                  </Card>
-                )}
                 <CategoryGrid
                   moduleIds={curso.moduleIds}
                   mostrarTitulo={false}

@@ -32,6 +32,7 @@ import {
   matricular,
   nivelamento as consultarNivelamento,
   progresso,
+  recusarNivelamento,
   responderNivelamento,
   resultadosDosExercicios,
   sair,
@@ -69,7 +70,6 @@ export default function App() {
   const [exercicioAberto, setExercicioAberto] = useState<string | null>(null);
   const [cursoConcluidoAgora, setCursoConcluidoAgora] = useState<string | null>(null);
   const [nivelamento, setNivelamento] = useState<NivelamentoDTO | null>(null);
-  const [nivelamentoAdiado, setNivelamentoAdiado] = useState(false);
   const aprovados = new Set(
     [...resultados.values()].filter((resultado) => resultado.aprovado).map((resultado) => resultado.moduleId),
   );
@@ -173,7 +173,6 @@ export default function App() {
       setExercicioAberto(null);
       setCursoConcluidoAgora(null);
       setNivelamento(null);
-      setNivelamentoAdiado(false);
       toast.info('Sua sessão expirou. Entre novamente.');
     } else {
       toast.error(err.message);
@@ -256,7 +255,6 @@ export default function App() {
 
   useEffect(() => {
     setNivelamento(null);
-    setNivelamentoAdiado(false);
     if (!usuarioId) return;
 
     let cancelado = false;
@@ -311,7 +309,6 @@ export default function App() {
     setExercicioAberto(null);
     setCursoConcluidoAgora(null);
     setNivelamento(null);
-    setNivelamentoAdiado(false);
     history.replaceState(null, '', '/');
     setCurrentSection('home');
     setSelectedLessonId(null);
@@ -418,6 +415,15 @@ export default function App() {
     }
   };
 
+  // Já respondido ou pulado noutra aba: busca o estado gravado para fechar o pop-up.
+  const recarregarNivelamento = async (): Promise<void> => {
+    try {
+      setNivelamento(await consultarNivelamento());
+    } catch (err) {
+      tratarErro(err);
+    }
+  };
+
   const handleResponderNivelamento = async (respostas: number[]): Promise<boolean> => {
     try {
       const nivelamentoRespondido = await responderNivelamento(respostas);
@@ -430,6 +436,25 @@ export default function App() {
     } catch (err) {
       if (err instanceof ApiError && err.code === 'nivelamento_respondido') {
         setNivelamento((anterior) => anterior ? { ...anterior, respondido: true } : anterior);
+        return true;
+      }
+      if (err instanceof ApiError && err.code === 'nivelamento_encerrado') {
+        await recarregarNivelamento();
+        return true;
+      }
+      tratarErro(err);
+      return false;
+    }
+  };
+
+  const handlePularNivelamento = async (): Promise<boolean> => {
+    try {
+      setNivelamento(await recusarNivelamento());
+      toast.info('Questionário pulado. Você pode seguir o curso normalmente.');
+      return true;
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'nivelamento_encerrado') {
+        await recarregarNivelamento();
         return true;
       }
       tratarErro(err);
@@ -515,8 +540,6 @@ export default function App() {
             liberado={liberado}
             resultados={resultados}
             onExercicio={setExercicioAberto}
-            nivelamento={nivelamento}
-            onResponderNivelamento={() => setNivelamentoAdiado(false)}
             dispensavel={dispensavel}
             dispensados={dispensados}
             onDispensar={handleDispensar}
@@ -645,8 +668,8 @@ export default function App() {
 
       <NivelamentoDialog
         perguntas={perguntasDoNivelamento}
-        aberto={Boolean(nivelamento?.disponivel && !nivelamento.respondido && !nivelamentoAdiado)}
-        onAdiar={() => setNivelamentoAdiado(true)}
+        aberto={Boolean(nivelamento?.disponivel && !nivelamento.respondido && !nivelamento.recusado)}
+        onPular={handlePularNivelamento}
         onEnviar={handleResponderNivelamento}
       />
 
