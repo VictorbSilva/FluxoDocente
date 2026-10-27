@@ -1,21 +1,29 @@
-import { courses, lessons, modules } from './catalog.js';
+import { catalogo } from './catalog.js';
+import type { Catalogo } from './contracts.js';
+
+// Sem fonte, as somas usam o catálogo real; a API passa o catálogo recebido em createApp.
+type Fonte = Pick<Catalogo, 'courses' | 'modules' | 'lessons'>;
 
 // Aulas sem durationSeconds e módulos sem exerciseMinutes contam zero.
-export function duracaoDoModuloEmSegundos(moduleId: string): number {
-  const modulo = modules.find((m) => m.id === moduleId);
+export function duracaoDoModuloEmSegundos(moduleId: string, fonte: Fonte = catalogo): number {
+  const modulo = fonte.modules.find((m) => m.id === moduleId);
   const exercicios = (modulo?.exerciseMinutes ?? 0) * 60;
-  const aulas = lessons
+  const aulas = fonte.lessons
     .filter((l) => l.moduleId === moduleId)
     .reduce((total, l) => total + (l.durationSeconds ?? 0), 0);
 
   return aulas + exercicios;
 }
 
-// O vídeo de encerramento do curso não é aula e não entra na soma.
-export function duracaoDoCursoEmSegundos(courseId: string): number {
-  const curso = courses.find((c) => c.id === courseId);
+export function duracaoDoCursoEmSegundos(courseId: string, fonte: Fonte = catalogo): number {
+  const curso = fonte.courses.find((c) => c.id === courseId);
 
-  return (curso?.moduleIds ?? []).reduce((total, id) => total + duracaoDoModuloEmSegundos(id), 0);
+  return (curso?.moduleIds ?? []).reduce((total, id) => total + duracaoDoModuloEmSegundos(id, fonte), 0);
+}
+
+// Carga horária do certificado: horas inteiras arredondadas, no mínimo 1.
+export function cargaHorariaEmHoras(courseId: string, fonte: Fonte = catalogo): number {
+  return Math.max(1, Math.round(duracaoDoCursoEmSegundos(courseId, fonte) / 3600));
 }
 
 export function formatarDuracao(segundos: number): string | null {

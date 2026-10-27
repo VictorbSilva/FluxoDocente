@@ -1,5 +1,6 @@
 import type {
   ApiErrorBody,
+  CertificadoDTO,
   CompletionDTO,
   CorrecaoDTO,
   MatriculaDTO,
@@ -128,6 +129,13 @@ export function recusarNivelamento(): Promise<NivelamentoDTO> {
 export function dispensarModulo(moduleId: string): Promise<NivelamentoDTO> {
   return requisitar<NivelamentoDTO>(
     '/me/dispensas/' + encodeURIComponent(moduleId),
+    { method: 'POST' },
+  );
+}
+
+export function emitirCertificado(courseId: string): Promise<CertificadoDTO> {
+  return requisitar<CertificadoDTO>(
+    '/me/certificados/' + encodeURIComponent(courseId),
     { method: 'POST' },
   );
 }

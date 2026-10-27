@@ -49,6 +49,14 @@ export interface NivelamentoDTO {
   dispensados: string[]; // moduleIds que o docente pulou
 }
 
+export interface CertificadoDTO {
+  courseId: string;
+  nome: string;
+  cargaHorariaHoras: number;
+  emitidoEm: string; // ISO 8601
+  codigo: string;
+}
+
 export interface ApiErrorBody {
   error: { code: string; message: string };
 }
