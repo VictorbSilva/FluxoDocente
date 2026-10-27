@@ -96,9 +96,14 @@ As telas têm endereços próprios: `/`, `/cursos`, `/progresso` e `/aula/<id da
 
 ```powershell
 npm test
+npm run test:front
 ```
 
-Os testes do servidor usam `TEST_DATABASE_URL`, aplicam as migrações e **apagam contas, sessões e conclusões desse banco**. Confira que a URL aponta para a branch `test` antes de executar. O front não tem testes nem lint.
+Os testes do servidor usam `TEST_DATABASE_URL`, aplicam as migrações e **apagam contas, sessões e conclusões desse banco**. Confira que a URL aponta para a branch `test` antes de executar.
+
+Os testes da tela carregam os componentes pelo Vite, com a API simulada, e não usam banco. O front não tem lint.
+
+O GitHub Actions (`.github/workflows/testes.yml`) roda `npm ci`, os testes da tela e o build em cada PR e em cada push na `main`. Os testes do servidor não rodam lá, porque precisam de `TEST_DATABASE_URL`.
 
 ## 7. Build e execução local em modo produção
 
@@ -136,10 +141,11 @@ Edite o array `lessons` em `shared/catalog.ts`, usando o conteúdo aprovado pelo
 - Em `youtubeId`, copie os **11 caracteres** do identificador do vídeo no link, sem a URL completa.
 - A ordem do array é a ordem de exibição das aulas dentro do módulo. Reordenar o array não exige mudar os IDs.
 
-Depois de editar, confira o catálogo e o servidor:
+Depois de editar, confira o catálogo, o servidor e a tela:
 
 ```powershell
 npm test
+npm run test:front
 ```
 
 Para publicar a alteração, gere um novo build e deploy. Os vídeos usam embed do YouTube; não há hospedagem própria de mídia.

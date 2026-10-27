@@ -38,6 +38,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `server/usuarios.ts`: criação e listagem de contas, geração de senha e reset com revogação das sessões.
 - `server/scripts/`: comandos de migração e administração de contas.
 - `server/tests/`: testes do servidor e do catálogo; usam `TEST_DATABASE_URL` e apagam os dados desse banco.
+- `src/app/tests/`: testes da tela; carregam os componentes reais pelo Vite, com a API simulada, sem servidor nem banco.
 - `src/app/components/*.tsx`: as seções do site (`Header`, `CabecalhoPublico`, `HeroSection`, `LoginSection`, `CategoryGrid`, `VideoPlayer`, `Painel`, `MeusCursos`, `NossosCursos`, `MeusCertificados`, `Rodape`, `SobreNos`).
 - `src/app/components/ui/`: componentes shadcn/ui gerados em lote. Vários importam pacotes que não estão instalados, por isso a checagem de tipos acusa erros **só nessa pasta**. O build passa porque o Vite só empacota o que é importado. Não corrija esses erros como efeito colateral de outra tarefa; se um desses componentes passar a ser usado, instale o pacote dele.
 - `src/styles/fluxodocente-theme.css`: paleta do projeto (variáveis `--fd-*` e os tokens de tema).
@@ -58,16 +59,18 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `npm run usuarios -- resetar <email>`: troca a senha e encerra as sessões da conta; aceita `--escolher-senha` com `npm.cmd`.
 - `npm run usuarios -- listar`: lista e-mails e datas de criação.
 - `npm test`: testes do servidor e do catálogo.
+- `npm run test:front`: testes da tela; não precisam de banco.
 - Checagem de tipos do front: `npx tsc --noEmit -p tsconfig.json` (os erros esperados estão todos em `src/app/components/ui/`).
 
 No PowerShell, o `npm` engole opções como `--escolher-senha`; use `npm.cmd` ao passá-las. Para os passos de ambiente, contas e deploy, consulte `README-RODAR.md`.
 
-Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). O front não tem testes nem lint.
+Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). Testes da tela: `npm run test:front`, sem banco. O front não tem lint.
 
 ## Fluxo de trabalho
 
 - Toda alteração vai numa branch, nunca direto na `main` (decidido após os conflitos do commit `8e8aa42`).
 - Revisão antes do merge: `node .claude/scripts/revisar-pr.mjs`.
+- Cada PR e cada push na `main` rodam no GitHub Actions os testes da tela e o build (`.github/workflows/testes.yml`). Os testes do servidor continuam locais, porque precisam de `TEST_DATABASE_URL`.
 - Nos commits, não adicione link de sessão (`Claude-Session: ...`) nem linha `Co-Authored-By` do assistente.
 
 ## Regras de trabalho
