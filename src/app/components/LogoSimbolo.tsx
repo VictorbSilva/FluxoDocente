@@ -1,0 +1,22 @@
+interface LogoSimboloProps {
+  className?: string;
+}
+
+// Símbolo da logo oficial (livro com degraus). As mesmas formas estão em
+// public/favicon.svg e public/logo-fluxodocente.svg.
+export function LogoSimbolo({ className }: LogoSimboloProps) {
+  return (
+    <svg
+      xmlns='http://www.w3.org/2000/svg'
+      viewBox='0 0 489 381'
+      aria-hidden='true'
+      focusable='false'
+      className={className}
+    >
+      <path fill='#23A9AD' d='M0 75.5C0 69.98 4.48 65.5 10 65.5L56 65.5C161.84 65.5 224 117.75 224 170L224 381C172.3 338.38 139 312 10 312C4.48 312 0 307.52 0 302Z' />
+      <path fill='#1ACABD' d='M238.5 381L238.5 203.5C238.5 182.32 255.82 165 277 165L479 165C484.52 165 489 169.48 489 175L489 291C489 296.52 484.52 301 479 301C334 301 292.84 333.76 238.5 381Z' />
+      <path fill='#1ACABD' d='M314 150.5L314 113.5C314 95.08 329.07 80 347.5 80L479 80C484.52 80 489 84.48 489 90L489 140.5C489 146.02 484.52 150.5 479 150.5Z' />
+      <path fill='#1ACABD' d='M396 65.5L396 33.5C396 15.07 411.07 0 429.5 0L479 0C484.52 0 489 4.48 489 10L489 55.5C489 61.02 484.52 65.5 479 65.5Z' />
+    </svg>
+  );
+}

@@ -3,8 +3,9 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { BookOpen, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { ApiError } from '../lib/api';
+import { LogoSimbolo } from './LogoSimbolo';
 
 interface LoginSectionProps {
   onLogin: (email: string, senha: string) => Promise<void>;
@@ -40,7 +41,7 @@ export function LoginSection({ onLogin }: LoginSectionProps) {
         <CardHeader className='space-y-2 items-center text-center pb-4 pt-6'>
           {/* Tornamos a "pílula" azul ligeiramente mais compacta nos paddings e tamanhos */}
           <div className='bg-[#e8f5f5] px-5 py-3 rounded-2xl shadow-sm flex items-center gap-3'>
-            <BookOpen className='h-7 w-7 text-[#21a3a3]' />
+            <LogoSimbolo className='h-8 w-auto' />
             <h1 className='text-xl font-bold text-[#2b364a] tracking-tight'>
               FluxoDocente
             </h1>

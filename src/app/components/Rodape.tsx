@@ -1,4 +1,4 @@
-import { BookOpen } from 'lucide-react';
+import { LogoSimbolo } from './LogoSimbolo';
 
 interface RodapeProps {
   autenticado: boolean;
@@ -13,10 +13,8 @@ export function Rodape({ autenticado, onSectionChange }: RodapeProps) {
       <div className='max-w-7xl mx-auto px-4'>
         <div className='grid gap-8 md:grid-cols-[2fr_1fr_1fr]'>
           <div className='space-y-4'>
-            <div className='flex items-center gap-2'>
-              <div className='bg-[#21a3a3] p-2 rounded-lg'>
-                <BookOpen aria-hidden='true' className='h-5 w-5 text-white' />
-              </div>
+            <div className='flex items-center gap-3'>
+              <LogoSimbolo className='h-9 w-auto' />
               <div>
                 <h3 className='text-xl'>FluxoDocente</h3>
                 <p className='text-gray-400 text-sm'>Inovação Educacional</p>
