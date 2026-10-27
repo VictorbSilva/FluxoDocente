@@ -108,7 +108,7 @@ test('antes de responder ao nivelamento, nada é dispensável nem dispensado', a
   const get = await novoCliente(baseUrl).enviar('GET', '/api/me/nivelamento', { cookie: cookieDeA });
 
   assert.equal(get.status, 200);
-  assert.deepEqual(get.corpo, { disponivel: true, respondido: false, dispensaveis: [], dispensados: [] });
+  assert.deepEqual(get.corpo, { disponivel: true, respondido: false, recusado: false, dispensaveis: [], dispensados: [] });
 });
 
 test("com 4 acertos em 'mod-b' e erro em 'mod-c', só 'mod-b' é dispensável, sem devolver os acertos", async () => {
@@ -122,7 +122,7 @@ test("com 4 acertos em 'mod-b' e erro em 'mod-c', só 'mod-b' é dispensável, s
 
   assert.equal(post.status, 201);
   for (const resposta of [post, get]) {
-    assert.deepEqual(resposta.corpo, { disponivel: true, respondido: true, dispensaveis: ['mod-b'], dispensados: [] });
+    assert.deepEqual(resposta.corpo, { disponivel: true, respondido: true, recusado: false, dispensaveis: ['mod-b'], dispensados: [] });
     assert.doesNotMatch(JSON.stringify(resposta.corpo), /acertos|nota/i);
   }
 });
@@ -136,7 +136,7 @@ test("'mod-b' só é dispensado depois de liberado; repetir devolve o mesmo resu
   assert.deepEqual(await dispensasNoBanco(idDeA), []);
 
   await concluirNoBanco(idDeA, 'aula-teste-1', 'aula-teste-2');
-  const esperado = { disponivel: true, respondido: true, dispensaveis: ['mod-b'], dispensados: ['mod-b'] };
+  const esperado = { disponivel: true, respondido: true, recusado: false, dispensaveis: ['mod-b'], dispensados: ['mod-b'] };
 
   const primeira = await dispensar(cookieDeA, 'mod-b');
   assert.equal(primeira.status, 200);
@@ -230,7 +230,7 @@ test('B não vê nem altera as dispensas de A', async () => {
 
   const cliente = novoCliente(baseUrl);
   const deB = await cliente.enviar('GET', '/api/me/nivelamento', { cookie: cookieDeB });
-  assert.deepEqual(deB.corpo, { disponivel: true, respondido: true, dispensaveis: [], dispensados: [] });
+  assert.deepEqual(deB.corpo, { disponivel: true, respondido: true, recusado: false, dispensaveis: [], dispensados: [] });
 
   const dispensaDeB = await dispensar(cookieDeB, 'mod-b');
   assert.equal(dispensaDeB.status, 403);

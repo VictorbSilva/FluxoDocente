@@ -6,8 +6,8 @@ import type { Gabaritos } from '../exercicios/gabarito.js';
 import { responderRespostasInvalidas, respostasValidas } from '../exercicios/rotas.js';
 import { lerEstadoDoProgresso, responderAcessoNegado, verificarAcessoAoModulo } from '../progresso/acesso.js';
 
-// Montado depois de exigirLogin. O dono da resposta e das dispensas é sempre req.session.userId.
-// Respostas e acertos são dado da pesquisa: ficam no banco e nunca são devolvidos;
+// Montado depois de exigirLogin. O dono da resposta, da recusa e das dispensas é sempre req.session.userId.
+// Respostas, acertos e recusas são dado da pesquisa: ficam no banco e nunca são devolvidos;
 // a API devolve só os módulos que o docente pode pular.
 export function criarRotasDoNivelamento(pool: pg.Pool, catalogo: Catalogo, gabaritos: Gabaritos): express.Router {
   const router = express.Router();
@@ -16,8 +16,9 @@ export function criarRotasDoNivelamento(pool: pg.Pool, catalogo: Catalogo, gabar
   const { nivelamento: gabarito } = gabaritos;
 
   async function lerNivelamento(userId: string): Promise<NivelamentoDTO> {
-    const [resposta, dispensas] = await Promise.all([
+    const [resposta, recusa, dispensas] = await Promise.all([
       pool.query<{ respostas: number[] }>('SELECT respostas FROM placement_answers WHERE user_id = $1', [userId]),
+      pool.query('SELECT 1 FROM placement_refusals WHERE user_id = $1', [userId]),
       pool.query<{ module_id: string }>('SELECT module_id FROM module_skips WHERE user_id = $1', [userId]),
     ]);
     const respostas = resposta.rows[0]?.respostas;
@@ -27,21 +28,65 @@ export function criarRotasDoNivelamento(pool: pg.Pool, catalogo: Catalogo, gabar
     return {
       disponivel,
       respondido: respostas !== undefined,
+      recusado: recusa.rowCount === 1,
       dispensaveis: respostas && gabarito ? modulosDispensaveis(catalogo, respostas, gabarito) : [],
       dispensados: catalogo.modules.filter((modulo) => dispensados.has(modulo.id)).map((modulo) => modulo.id),
     };
+  }
+
+  // Responder e recusar se excluem. A trava na linha do docente em users faz dois pedidos
+  // simultâneos esperarem um pelo outro, e cada um só confere o que já foi gravado depois de travar.
+  // Devolve como o nivelamento já estava encerrado; se estava aberto, grava e devolve null.
+  async function encerrarNivelamento(
+    userId: string,
+    gravar: (client: pg.PoolClient) => Promise<unknown>,
+  ): Promise<'respondido' | 'recusado' | null> {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+      await client.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
+      const { rows } = await client.query<{ respondido: boolean; recusado: boolean }>(
+        `SELECT EXISTS (SELECT 1 FROM placement_answers WHERE user_id = $1) AS respondido,
+                EXISTS (SELECT 1 FROM placement_refusals WHERE user_id = $1) AS recusado`,
+        [userId],
+      );
+      const encerrado = rows[0].respondido ? 'respondido' : rows[0].recusado ? 'recusado' : null;
+
+      if (!encerrado) {
+        await gravar(client);
+      }
+
+      await client.query('COMMIT');
+      return encerrado;
+    } catch (erro) {
+      await client.query('ROLLBACK');
+      throw erro;
+    } finally {
+      client.release();
+    }
+  }
+
+  function responderIndisponivel(res: express.Response): void {
+    res.status(404).json({
+      error: { code: 'nivelamento_indisponivel', message: 'Nivelamento indisponível.' },
+    });
+  }
+
+  function responderEncerrado(res: express.Response): void {
+    res.status(409).json({
+      error: { code: 'nivelamento_encerrado', message: 'O questionário diagnóstico já foi encerrado.' },
+    });
   }
 
   router.get('/nivelamento', async (req, res) => {
     res.status(200).json(await lerNivelamento(req.session.userId!));
   });
 
-  // Respondido uma vez, sem exigir matrícula.
+  // Respondido uma vez, sem exigir matrícula; quem recusou não responde mais.
   router.post('/nivelamento', async (req, res) => {
     if (!disponivel) {
-      res.status(404).json({
-        error: { code: 'nivelamento_indisponivel', message: 'Nivelamento indisponível.' },
-      });
+      responderIndisponivel(res);
       return;
     }
 
@@ -56,16 +101,41 @@ export function criarRotasDoNivelamento(pool: pg.Pool, catalogo: Catalogo, gabar
     const acertos = gabarito ? respostas.filter((resposta, indice) => resposta === gabarito[indice]).length : null;
 
     // O pg converteria um array em array do Postgres; a coluna é jsonb.
-    const { rowCount } = await pool.query(
-      `INSERT INTO placement_answers (user_id, respostas, acertos, total) VALUES ($1, $2, $3, $4)
-       ON CONFLICT (user_id) DO NOTHING RETURNING user_id`,
+    const encerrado = await encerrarNivelamento(req.session.userId!, (client) => client.query(
+      'INSERT INTO placement_answers (user_id, respostas, acertos, total) VALUES ($1, $2, $3, $4)',
       [req.session.userId, JSON.stringify(respostas), acertos, perguntas.length],
-    );
+    ));
 
-    if (rowCount === 0) {
+    if (encerrado === 'recusado') {
+      responderEncerrado(res);
+      return;
+    }
+
+    if (encerrado === 'respondido') {
       res.status(409).json({
         error: { code: 'nivelamento_respondido', message: 'Você já respondeu ao nivelamento.' },
       });
+      return;
+    }
+
+    res.status(201).json(await lerNivelamento(req.session.userId!));
+  });
+
+  // Recusado uma vez, sem corpo e sem exigir matrícula. Quem recusa não respondeu,
+  // então não tem módulo dispensável. A recusa não se desfaz.
+  router.post('/nivelamento/recusa', async (req, res) => {
+    if (!disponivel) {
+      responderIndisponivel(res);
+      return;
+    }
+
+    const encerrado = await encerrarNivelamento(req.session.userId!, (client) => client.query(
+      'INSERT INTO placement_refusals (user_id) VALUES ($1)',
+      [req.session.userId],
+    ));
+
+    if (encerrado) {
+      responderEncerrado(res);
       return;
     }
 
