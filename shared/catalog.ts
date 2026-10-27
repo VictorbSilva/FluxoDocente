@@ -8,12 +8,19 @@ export const courses: Course[] = [
     title: 'Fluxo Docente',
     description:
       'Curso on-line para docentes do ensino superior aprenderem a usar ferramentas de Inteligência Artificial de forma ética e prática, do planejamento das aulas à produção de materiais e à organização da rotina acadêmica.',
-    moduleIds: ['modulo-1', 'modulo-2', 'modulo-3', 'modulo-4'],
+    moduleIds: ['introducao', 'modulo-1', 'modulo-2', 'modulo-3', 'modulo-4', 'encerramento'],
     closingYoutubeId: 'Q-9P8p9psng',
   },
 ];
 
 export const modules: Module[] = [
+  {
+    id: 'introducao',
+    title: 'Introdução',
+    description: 'Apresentação da plataforma Fluxo Docente.',
+    color: 'from-[#2b364a] to-[#177a7a]',
+    tags: [],
+  },
   {
     id: 'modulo-1',
     title: 'Módulo 1: Engenharia de Prompt',
@@ -27,6 +34,7 @@ export const modules: Module[] = [
     id: 'modulo-2',
     title: 'Módulo 2: Otimização do Planejamento',
     description: 'Uso de ferramentas de Inteligência Artificial para otimizar o planejamento das aulas.',
+    exerciseMinutes: 15,
     color: 'from-[#21a3a3] to-[#6cf3d5]',
     tags: ['NotebookLM', 'ChatGPT', 'Claude'],
   },
@@ -34,6 +42,7 @@ export const modules: Module[] = [
     id: 'modulo-3',
     title: 'Módulo 3: Avaliação e Feedback',
     description: 'Geração ágil de exercícios, provas e feedbacks.',
+    exerciseMinutes: 15,
     color: 'from-[#177a7a] to-[#21a3a3]',
     tags: [],
   },
@@ -42,8 +51,16 @@ export const modules: Module[] = [
     title: 'Módulo 4: Gestão da Rotina e Consolidação',
     description:
       'Automação do atendimento ao aluno, controle e organização automatizada de notas.',
+    exerciseMinutes: 15,
     color: 'from-orange-500 to-red-500',
     tags: ['Notion', 'Trello', 'ClickUp'],
+  },
+  {
+    id: 'encerramento',
+    title: 'Encerramento',
+    description: 'Mensagem de encerramento da equipe.',
+    color: 'from-[#177a7a] to-[#2b364a]',
+    tags: [],
   },
 ];
 
@@ -51,7 +68,7 @@ export const modules: Module[] = [
 export const lessons: Lesson[] = [
   {
     id: 'm1-a01',
-    moduleId: 'modulo-1',
+    moduleId: 'introducao',
     youtubeId: 'AkH9RGYHoLs',
     title: 'Introdução da plataforma',
     durationSeconds: 86,
@@ -202,6 +219,13 @@ export const lessons: Lesson[] = [
     youtubeId: 'AfK9HopCwng',
     title: 'Aula 8 Gestão da Rotina e Consolidação',
     durationSeconds: 466,
+  },
+  {
+    id: 'enc-a01',
+    moduleId: 'encerramento',
+    youtubeId: 'Q-9P8p9psng',
+    title: 'Finalização do curso',
+    durationSeconds: 75,
   },
 ];
 

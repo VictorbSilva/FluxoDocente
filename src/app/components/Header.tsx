@@ -16,10 +16,10 @@ export function Header({
 }: HeaderProps) {
   const navItems = [
     { id: 'home', label: 'Início' },
-    { id: 'meus-cursos', label: 'Meus cursos' },
-    { id: 'nossos-cursos', label: 'Nossos cursos' },
-    { id: 'certificados', label: 'Meus certificados' },
     { id: 'sobre', label: 'Sobre nós' },
+    { id: 'meus-cursos', label: 'Meus cursos' },
+    { id: 'certificados', label: 'Meus certificados' },
+    { id: 'mais-cursos', label: 'Mais cursos' },
   ];
 
   return (

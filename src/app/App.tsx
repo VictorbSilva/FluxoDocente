@@ -511,7 +511,7 @@ export default function App() {
             concluido={(courseId) => cursoConcluido(catalogo, courseId, concluidas, aprovados, dispensados)}
             onVerMensagem={setCursoConcluidoAgora}
             onCategorySelect={handleCategorySelect}
-            onVerNossosCursos={() => irPara('nossos-cursos', null)}
+            onVerNossosCursos={() => irPara('mais-cursos', null)}
             liberado={liberado}
             resultados={resultados}
             onExercicio={setExercicioAberto}
@@ -523,7 +523,7 @@ export default function App() {
           />
         );
 
-      case 'nossos-cursos':
+      case 'mais-cursos':
         return (
           <NossosCursos
             matriculas={matriculas}

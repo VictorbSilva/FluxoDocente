@@ -150,8 +150,8 @@ test('o questionário diagnóstico tem 20 perguntas com quatro alternativas, cin
     assert.equal(pergunta.alternativas.length, 4, pergunta.id);
   }
 
-  for (const modulo of modules) {
-    assert.equal(catalogo.nivelamento.filter((pergunta) => pergunta.moduleId === modulo.id).length, 5, modulo.id);
+  for (const moduleId of ['modulo-1', 'modulo-2', 'modulo-3', 'modulo-4']) {
+    assert.equal(catalogo.nivelamento.filter((pergunta) => pergunta.moduleId === moduleId).length, 5, moduleId);
   }
 });
 
