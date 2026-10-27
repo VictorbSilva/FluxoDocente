@@ -31,6 +31,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `server/auth/`: login, sessão atual, logout, hash de senha com scrypt e verificação de sessão.
 - `server/progresso/`: consulta e conclusão de aulas para o dono da sessão.
 - `server/cursos/`: matrículas e nome do usuário.
+- `server/certificados/`: emissão do certificado de conclusão do curso.
 - `server/exercicios/` e `server/nivelamento/`: rotas e gabaritos; nunca importados por `src/`.
 - `server/db/`: pool do Postgres e aplicação das migrações.
 - `server/migrations/`: migrações SQL de contas, sessões e conclusões de aulas.
@@ -90,3 +91,4 @@ Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). O front não te
 12. Exercícios: um por módulo, de múltipla escolha. O gabarito fica só em `server/` e nunca chega ao navegador. Aprovação com 70% de acertos; pode ser refeito sem limite, vale a melhor nota e a aprovação não se perde. As respostas das tentativas não são guardadas.
 13. Nivelamento: oferecido uma única vez, depois do login; o docente responde ou recusa, e nos dois casos o questionário não aparece de novo. Respostas, acertos e recusas ficam no banco como dado da pesquisa e nunca são mostrados ao docente; a API devolve só os módulos que ele pode pular. Precisa constar no termo de consentimento. Motivo de aparecer uma vez só: decisão de Victor (26/10).
 14. Dispensa pelo diagnóstico: com 80% ou mais de acertos nas questões de um módulo no questionário diagnóstico (4 ou 5 de 5), o docente pode pular esse módulo quando ele estiver liberado. Pular é opcional e não se desfaz; o módulo dispensado conta como completo para liberar o seguinte e para concluir o curso. Motivo: decisão de Victor (23/10).
+15. Certificado: emitido pela API só para curso concluído (decisões 11 e 14), com o nome da conta; código de 10 caracteres, carga horária em horas inteiras arredondadas e data gravados na primeira emissão. O PDF é gerado no navegador; o CPF é digitado na hora, vai só para o PDF e nunca é enviado nem guardado. Assinatura: Equipe Fluxo Docente. Motivo: pedido de Victor (26/10).

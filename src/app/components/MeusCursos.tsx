@@ -13,7 +13,7 @@ interface MeusCursosProps {
   carregado: boolean;
   concluidas: ReadonlyMap<string, string>;
   concluido: (courseId: string) => boolean;
-  onVerMensagem: (courseId: string) => void;
+  onBaixarCertificado: (courseId: string) => void;
   onCategorySelect: (categoryId: string) => void;
   onVerNossosCursos: () => void;
   liberado: (moduleId: string) => boolean;
@@ -29,7 +29,7 @@ export function MeusCursos({
   carregado,
   concluidas,
   concluido,
-  onVerMensagem,
+  onBaixarCertificado,
   onCategorySelect,
   onVerNossosCursos,
   liberado,
@@ -91,8 +91,8 @@ export function MeusCursos({
                     value={total ? (feitas / total) * 100 : 0}
                   />
                   {finalizado && (
-                    <Button variant='outline' onClick={() => onVerMensagem(curso.id)} className='self-start'>
-                      Ver mensagem de encerramento
+                    <Button variant='outline' onClick={() => onBaixarCertificado(curso.id)} className='self-start'>
+                      Baixar certificado
                     </Button>
                   )}
                 </Card>

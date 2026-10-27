@@ -6,6 +6,7 @@ import type { Catalogo } from '../shared/contracts.js';
 import { criarRotasDeAnotacoes } from './anotacoes/rotas.js';
 import { criarRotasDeAuth } from './auth/rotas.js';
 import { criarExigirLogin, criarMiddlewareDeSessao } from './auth/sessao.js';
+import { criarRotasDeCertificados } from './certificados/rotas.js';
 import { criarRotasDeCursos } from './cursos/rotas.js';
 import type { Gabaritos } from './exercicios/gabarito.js';
 import { criarRotasDeExercicios } from './exercicios/rotas.js';
@@ -73,6 +74,7 @@ export function createApp(opcoes: {
     criarRotasDeCursos(opcoes.pool, catalogo),
     criarRotasDeExercicios(opcoes.pool, catalogo, gabaritos),
     criarRotasDoNivelamento(opcoes.pool, catalogo, gabaritos),
+    criarRotasDeCertificados(opcoes.pool, catalogo),
   );
 
   app.use('/api', (_req, res) => {

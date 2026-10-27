@@ -15,6 +15,7 @@ import { AulaIndisponivel } from './components/AulaIndisponivel';
 import { ExercicioDialog } from './components/ExercicioDialog';
 import { NivelamentoDialog } from './components/NivelamentoDialog';
 import { ConclusaoDialog } from './components/ConclusaoDialog';
+import { CertificadoDialog } from './components/CertificadoDialog';
 import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
 import { catalogo, modules, lessons } from '../../shared/catalog';
@@ -69,6 +70,7 @@ export default function App() {
   const [tentativaCarregamentoAula, setTentativaCarregamentoAula] = useState(0);
   const [exercicioAberto, setExercicioAberto] = useState<string | null>(null);
   const [cursoConcluidoAgora, setCursoConcluidoAgora] = useState<string | null>(null);
+  const [cursoDoCertificado, setCursoDoCertificado] = useState<string | null>(null);
   const [nivelamento, setNivelamento] = useState<NivelamentoDTO | null>(null);
   const aprovados = new Set(
     [...resultados.values()].filter((resultado) => resultado.aprovado).map((resultado) => resultado.moduleId),
@@ -172,6 +174,7 @@ export default function App() {
       setResultadosCarregados(false);
       setExercicioAberto(null);
       setCursoConcluidoAgora(null);
+      setCursoDoCertificado(null);
       setNivelamento(null);
       toast.info('Sua sessão expirou. Entre novamente.');
     } else {
@@ -308,6 +311,7 @@ export default function App() {
     setResultadosCarregados(false);
     setExercicioAberto(null);
     setCursoConcluidoAgora(null);
+    setCursoDoCertificado(null);
     setNivelamento(null);
     history.replaceState(null, '', '/');
     setCurrentSection('home');
@@ -534,7 +538,7 @@ export default function App() {
             carregado={matriculasCarregadas && progressoCarregado && resultadosCarregados}
             concluidas={concluidas}
             concluido={(courseId) => cursoConcluido(catalogo, courseId, concluidas, aprovados, dispensados)}
-            onVerMensagem={setCursoConcluidoAgora}
+            onBaixarCertificado={setCursoDoCertificado}
             onCategorySelect={handleCategorySelect}
             onVerNossosCursos={() => irPara('mais-cursos', null)}
             liberado={liberado}
@@ -557,7 +561,12 @@ export default function App() {
         );
 
       case 'certificados':
-        return <MeusCertificados />;
+        return (
+          <MeusCertificados
+            cursosConcluidos={catalogo.courses.filter((curso) => cursoConcluido(catalogo, curso.id, concluidas, aprovados, dispensados))}
+            onBaixarCertificado={setCursoDoCertificado}
+          />
+        );
 
       case 'sobre':
         return <SobreNos />;
@@ -643,6 +652,7 @@ export default function App() {
   // =======================================================================
   const exercicioSelecionado = exercicios.find((exercicio) => exercicio.moduleId === exercicioAberto && exercicio.perguntas.length > 0);
   const cursoFinalizado = catalogo.courses.find((curso) => curso.id === cursoConcluidoAgora);
+  const cursoParaCertificado = catalogo.courses.find((curso) => curso.id === cursoDoCertificado);
 
   return (
     <div className='min-h-screen bg-white'>
@@ -678,6 +688,17 @@ export default function App() {
           curso={cursoFinalizado}
           aberto={true}
           onFechar={() => setCursoConcluidoAgora(null)}
+          onBaixarCertificado={() => setCursoDoCertificado(cursoFinalizado.id)}
+        />
+      )}
+
+      {cursoParaCertificado && (
+        <CertificadoDialog
+          curso={cursoParaCertificado}
+          aberto={true}
+          onFechar={() => setCursoDoCertificado(null)}
+          onIrParaPainel={() => irPara('home', null)}
+          onErro={tratarErro}
         />
       )}
 
