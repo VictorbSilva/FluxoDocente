@@ -8,12 +8,19 @@ export const courses: Course[] = [
     title: 'Fluxo Docente',
     description:
       'Curso on-line para docentes do ensino superior aprenderem a usar ferramentas de Inteligência Artificial de forma ética e prática, do planejamento das aulas à produção de materiais e à organização da rotina acadêmica.',
-    moduleIds: ['modulo-1', 'modulo-2', 'modulo-3', 'modulo-4'],
+    moduleIds: ['introducao', 'modulo-1', 'modulo-2', 'modulo-3', 'modulo-4', 'encerramento'],
     closingYoutubeId: 'Q-9P8p9psng',
   },
 ];
 
 export const modules: Module[] = [
+  {
+    id: 'introducao',
+    title: 'Introdução',
+    description: 'Apresentação da plataforma Fluxo Docente.',
+    color: 'from-[#2b364a] to-[#177a7a]',
+    tags: [],
+  },
   {
     id: 'modulo-1',
     title: 'Módulo 1: Engenharia de Prompt',
@@ -45,13 +52,20 @@ export const modules: Module[] = [
     color: 'from-orange-500 to-red-500',
     tags: ['Notion', 'Trello', 'ClickUp'],
   },
+  {
+    id: 'encerramento',
+    title: 'Encerramento',
+    description: 'Mensagem de encerramento da equipe.',
+    color: 'from-[#177a7a] to-[#2b364a]',
+    tags: [],
+  },
 ];
 
 // Preenchido com o conteúdo aprovado pelos autores. A ordem do array é a ordem de exibição dentro do módulo.
 export const lessons: Lesson[] = [
   {
     id: 'm1-a01',
-    moduleId: 'modulo-1',
+    moduleId: 'introducao',
     youtubeId: 'AkH9RGYHoLs',
     title: 'Introdução da plataforma',
     durationSeconds: 86,
@@ -202,6 +216,13 @@ export const lessons: Lesson[] = [
     youtubeId: 'AfK9HopCwng',
     title: 'Aula 8 Gestão da Rotina e Consolidação',
     durationSeconds: 466,
+  },
+  {
+    id: 'enc-a01',
+    moduleId: 'encerramento',
+    youtubeId: 'Q-9P8p9psng',
+    title: 'Finalização do curso',
+    durationSeconds: 75,
   },
 ];
 
