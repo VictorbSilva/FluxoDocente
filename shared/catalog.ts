@@ -34,6 +34,7 @@ export const modules: Module[] = [
     id: 'modulo-2',
     title: 'Módulo 2: Otimização do Planejamento',
     description: 'Uso de ferramentas de Inteligência Artificial para otimizar o planejamento das aulas.',
+    exerciseMinutes: 15,
     color: 'from-[#21a3a3] to-[#6cf3d5]',
     tags: ['NotebookLM', 'ChatGPT', 'Claude'],
   },
@@ -41,6 +42,7 @@ export const modules: Module[] = [
     id: 'modulo-3',
     title: 'Módulo 3: Avaliação e Feedback',
     description: 'Geração ágil de exercícios, provas e feedbacks.',
+    exerciseMinutes: 15,
     color: 'from-[#177a7a] to-[#21a3a3]',
     tags: [],
   },
@@ -49,6 +51,7 @@ export const modules: Module[] = [
     title: 'Módulo 4: Gestão da Rotina e Consolidação',
     description:
       'Automação do atendimento ao aluno, controle e organização automatizada de notas.',
+    exerciseMinutes: 15,
     color: 'from-orange-500 to-red-500',
     tags: ['Notion', 'Trello', 'ClickUp'],
   },
