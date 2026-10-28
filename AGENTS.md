@@ -58,6 +58,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `npm run usuarios -- criar <email>`: cria conta e mostra uma senha aleatória uma vez.
 - `npm.cmd run usuarios -- criar <email> --escolher-senha`: cria conta com senha digitada e confirmada.
 - `npm run usuarios -- resetar <email>`: troca a senha e encerra as sessões da conta; aceita `--escolher-senha` com `npm.cmd`.
+- `npm run usuarios -- excluir <email>`: apaga a conta e todos os dados dela, depois de pedir o e-mail de novo; atende os pedidos de exclusão do termo.
 - `npm run usuarios -- listar`: lista e-mails e datas de criação.
 - `npm test`: testes do servidor e do catálogo.
 - `npm run test:front`: testes da tela; não precisam de banco.
@@ -96,7 +97,7 @@ Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). Testes da tela:
 13. Nivelamento: oferecido uma única vez, depois do login; o docente responde ou recusa, e nos dois casos o questionário não aparece de novo. Respostas, acertos e recusas ficam no banco como dado da pesquisa e nunca são mostrados ao docente; a API devolve só os módulos que ele pode pular. Precisa constar no termo de consentimento. Motivo de aparecer uma vez só: decisão de Victor (26/10).
 14. Dispensa pelo diagnóstico: com 80% ou mais de acertos nas questões de um módulo no questionário diagnóstico (4 ou 5 de 5), o docente pode pular esse módulo quando ele estiver liberado. Pular é opcional e não se desfaz; o módulo dispensado conta como completo para liberar o seguinte e para concluir o curso. Motivo: decisão de Victor (23/10).
 15. Certificado: emitido pela API só para curso concluído (decisões 11 e 14), com o nome da conta; código de 10 caracteres, carga horária em horas inteiras arredondadas e data gravados na primeira emissão. O PDF é gerado no navegador; o CPF é digitado na hora, vai só para o PDF e nunca é enviado nem guardado. Assinatura: Equipe Fluxo Docente. Motivo: pedido de Victor (26/10).
-16. Cadastro aberto: o docente cria a conta com nome, e-mail e senha e aceita o termo de consentimento no formulário; a API grava a data e a versão do aceite (`VERSAO_DO_TERMO`, em shared/termo.ts). Sem confirmação de e-mail. Contas criadas pelo script ficam sem aceite. Motivo: divulgação do site num grupo de professores (Victor, 28/10).
+16. Cadastro aberto: o docente cria a conta com nome, e-mail e senha e aceita o termo de consentimento no formulário; a API grava a data e a versão do aceite (`VERSAO_DO_TERMO`, em shared/termo.ts). Sem confirmação de e-mail. Contas criadas pelo script ficam sem aceite. Pedidos de exclusão são atendidos pelo script (`npm run usuarios -- excluir`). Motivo: divulgação do site num grupo de professores (Victor, 28/10).
 
 ## Executar tarefa
 

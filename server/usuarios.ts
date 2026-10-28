@@ -58,6 +58,33 @@ export async function resetarSenha(pool: pg.Pool, email: string, senha?: string)
   }
 }
 
+// As tabelas ligadas a users apagam em cascata; session não tem chave estrangeira.
+export async function excluirUsuario(pool: pg.Pool, email: string): Promise<{ email: string }> {
+  const normalizado = email.trim().toLowerCase();
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query<{ id: string }>(
+      'DELETE FROM users WHERE email = $1 RETURNING id',
+      [normalizado],
+    );
+
+    if (rows.length === 0) {
+      throw new Error('Conta não encontrada.');
+    }
+
+    await client.query("DELETE FROM session WHERE sess->>'userId' = $1", [rows[0].id]);
+    await client.query('COMMIT');
+    return { email: normalizado };
+  } catch (erro) {
+    await client.query('ROLLBACK');
+    throw erro;
+  } finally {
+    client.release();
+  }
+}
+
 export async function listarUsuarios(pool: pg.Pool): Promise<{ email: string; created_at: Date }[]> {
   const { rows } = await pool.query<{ email: string; created_at: Date }>(
     'SELECT email, created_at FROM users ORDER BY email',

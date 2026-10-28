@@ -2,7 +2,7 @@ import { after, before, beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import type pg from 'pg';
 import { verificarSenha } from '../auth/senha.js';
-import { criarUsuario, listarUsuarios, resetarSenha } from '../usuarios.js';
+import { criarUsuario, excluirUsuario, listarUsuarios, resetarSenha } from '../usuarios.js';
 import { prepararBanco } from './ajuda.js';
 
 let pool: pg.Pool;
@@ -143,6 +143,47 @@ for (const tamanho of [8, 200]) {
     assert.equal(await verificarSenha(outraSenha, alterada[0].password_hash), true);
   });
 }
+
+test('excluirUsuario apaga a conta, as sessões e os dados dela sem tocar em outra', async () => {
+  await criarUsuario(pool, 'ana@x.com');
+  await criarUsuario(pool, 'outro@x.com');
+  const { rows: usuarios } = await pool.query('SELECT id, email FROM users ORDER BY email');
+  const outro = usuarios[1];
+
+  for (const usuario of usuarios) {
+    await pool.query(
+      "INSERT INTO session (sid, sess, expire) VALUES ($1, $2::json, now() + interval '1 day')",
+      [usuario.email, JSON.stringify({ userId: usuario.id })],
+    );
+    await pool.query('INSERT INTO lesson_completions (user_id, lesson_id) VALUES ($1, $2)', [usuario.id, 'aula-1']);
+    await pool.query(
+      'INSERT INTO lesson_notes (user_id, lesson_id, content) VALUES ($1, $2, $3)',
+      [usuario.id, 'aula-1', `anotação de ${usuario.email}`],
+    );
+  }
+
+  const excluida = await excluirUsuario(pool, ' Ana@X.com ');
+  const { rows: restantes } = await pool.query('SELECT id FROM users');
+  const { rows: sessoes } = await pool.query('SELECT sid, sess FROM session');
+  const { rows: conclusoes } = await pool.query('SELECT user_id FROM lesson_completions');
+  const { rows: anotacoes } = await pool.query('SELECT user_id, content FROM lesson_notes');
+
+  assert.deepEqual(excluida, { email: 'ana@x.com' });
+  assert.deepEqual(restantes, [{ id: outro.id }]);
+  assert.deepEqual(sessoes, [{ sid: outro.email, sess: { userId: outro.id } }]);
+  assert.deepEqual(conclusoes, [{ user_id: outro.id }]);
+  assert.deepEqual(anotacoes, [{ user_id: outro.id, content: 'anotação de outro@x.com' }]);
+});
+
+test('excluirUsuario recusa um e-mail inexistente', async () => {
+  await criarUsuario(pool, 'ana@x.com');
+
+  await assert.rejects(excluirUsuario(pool, 'ninguem@x.com'), {
+    message: 'Conta não encontrada.',
+  });
+  const { rows } = await pool.query('SELECT email FROM users');
+  assert.deepEqual(rows, [{ email: 'ana@x.com' }]);
+});
 
 test('listarUsuarios devolve somente e-mail e data de criação, por e-mail', async () => {
   await criarUsuario(pool, 'z@x.com');
