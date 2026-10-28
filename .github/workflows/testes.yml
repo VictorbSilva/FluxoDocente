@@ -1,0 +1,24 @@
+name: Testes
+
+# Os testes do servidor ficam de fora: precisam de TEST_DATABASE_URL e apagam os dados desse banco.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tela-e-build:
+    name: Testes da tela e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:front
+      - run: npm run build
