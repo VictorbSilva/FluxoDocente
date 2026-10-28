@@ -1,6 +1,6 @@
 import { lessonIds } from '../../../shared/catalog';
 
-export type Secao = 'home' | 'meus-cursos' | 'mais-cursos' | 'certificados' | 'sobre' | 'entrar';
+export type Secao = 'home' | 'meus-cursos' | 'mais-cursos' | 'certificados' | 'sobre' | 'entrar' | 'cadastro';
 
 export const SECOES_PRIVADAS: ReadonlySet<string> = new Set([
   'meus-cursos',
@@ -19,6 +19,7 @@ const PREFIXO_AULA = '/aula/';
 // aula não guarda a seção de origem, então ela também abre com a seção inicial.
 export function lerRota(pathname: string): Rota {
   if (pathname === '/entrar') return { section: 'entrar', lessonId: null };
+  if (pathname === '/cadastro') return { section: 'cadastro', lessonId: null };
   if (pathname === '/meus-cursos' || pathname === '/cursos') {
     return { section: 'meus-cursos', lessonId: null };
   }
@@ -43,6 +44,7 @@ export function lerRota(pathname: string): Rota {
 export function caminhoDe(section: string, lessonId: string | null): string {
   if (lessonId) return PREFIXO_AULA + encodeURIComponent(lessonId);
   if (section === 'entrar') return '/entrar';
+  if (section === 'cadastro') return '/cadastro';
   if (section === 'meus-cursos') return '/meus-cursos';
   if (section === 'mais-cursos') return '/mais-cursos';
   if (section === 'certificados') return '/certificados';
