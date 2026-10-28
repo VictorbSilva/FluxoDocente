@@ -1,5 +1,6 @@
-import { BookOpen, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { Button } from './ui/button';
+import { LogoSimbolo } from './LogoSimbolo';
 
 interface CabecalhoPublicoProps {
   onEntrar: () => void;
@@ -15,9 +16,7 @@ export function CabecalhoPublico({ onEntrar }: CabecalhoPublicoProps) {
         <div className='flex items-center justify-between'>
           {/* Logo */}
           <div className='flex items-center gap-3'>
-            <div className='bg-white/20 p-2 rounded-lg'>
-              <BookOpen className='h-6 w-6' />
-            </div>
+            <LogoSimbolo className='h-9 w-auto' />
             <div>
               <h1 className='text-xl tracking-tight'>FluxoDocente</h1>
               <p className='text-xs text-white/80'>Inovação Educacional</p>

@@ -42,6 +42,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `src/app/components/*.tsx`: as seções do site (`Header`, `CabecalhoPublico`, `HeroSection`, `LoginSection`, `CategoryGrid`, `VideoPlayer`, `Painel`, `MeusCursos`, `NossosCursos`, `MeusCertificados`, `Rodape`, `SobreNos`).
 - `src/app/components/ui/`: componentes shadcn/ui gerados em lote. Vários importam pacotes que não estão instalados, por isso a checagem de tipos acusa erros **só nessa pasta**. O build passa porque o Vite só empacota o que é importado. Não corrija esses erros como efeito colateral de outra tarefa; se um desses componentes passar a ser usado, instale o pacote dele.
 - `src/styles/fluxodocente-theme.css`: paleta do projeto (variáveis `--fd-*` e os tokens de tema).
+- `public/`: logo oficial vetorizada (`logo-fluxodocente.svg`, símbolo com o texto em curvas na fonte Figtree), `favicon.svg` e `apple-touch-icon.png`. O símbolo sozinho fica em `src/app/components/LogoSimbolo.tsx`, usado no cabeçalho, no login e no rodapé.
 - `guidelines/Guidelines.md` é o modelo vazio do Figma Make: não contém regras.
 
 ## Comandos
