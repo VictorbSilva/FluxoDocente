@@ -85,7 +85,7 @@ Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). Testes da tela:
 1. Backend em Node + Express + TypeScript, no mesmo repositório e no mesmo `package.json` do front. Motivo: mesma linguagem do front, custo menor e é o que Victor usa no dia a dia. O texto do TCC, que cita Django, será corrigido no texto.
 2. Render (web service pago) serve o front compilado e a API `/api` na mesma origem; banco Neon Postgres no plano gratuito. Motivo: uma origem só dispensa CORS e simplifica o cookie.
 3. Sessão com `express-session` + `connect-pg-simple` no Postgres; cookie `fd.sid` HttpOnly, SameSite=Lax, Secure em produção, 7 dias, sem renovação automática. Motivo: sessão revogável no logout e no reset de senha.
-4. Contas pré-criadas por script; sem cadastro público e sem recuperação de senha por e-mail. O reset é feito por Victor. Motivo: piloto fechado e prazo.
+4. Restrição a contas pré-criadas por script, sem cadastro público: superada pela decisão 16. Sem recuperação de senha por e-mail; o reset é feito por Victor. Motivo da decisão original: piloto fechado e prazo.
 5. Conclusão de aula é autodeclarada pelo botão "Marcar como Concluído". Nenhum evento do player conclui aula e não existe "desmarcar". Motivo: não inventar regra pedagógica.
 6. Sem gamificação: pontos, níveis, metas, sequências, recorde e anotações de exemplo saem da interface. Fica o progresso por aula e por módulo. O certificado de conclusão do curso foi pedido pelo orientador em 16/10 e entra no bloco 5.
 7. Vídeos pelo embed do YouTube (iframe de `youtube-nocookie.com`), sem YouTube Data API e sem hospedagem de mídia.
