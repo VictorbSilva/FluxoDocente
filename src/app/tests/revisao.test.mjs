@@ -39,6 +39,17 @@ const { mensagens } = await vite.ssrLoadModule('\0toasts-do-teste');
 const perguntasOriginais = exercicios.map((exercicio) => exercicio.perguntas);
 const globaisOriginais = { fetch: globalThis.fetch, window: globalThis.window, history: globalThis.history };
 const aula = lessons.find((lesson) => lesson.moduleId === exercicios[0].moduleId);
+// Os módulos do curso antes do da aula vêm completos, para que ela esteja liberada.
+const curso = courses.find((c) => c.moduleIds.includes(aula.moduleId));
+const posicao = curso.moduleIds.indexOf(aula.moduleId);
+const modulosAnteriores = curso.moduleIds.slice(0, posicao);
+const proximoModulo = curso.moduleIds[posicao + 1];
+const conclusoesAnteriores = lessons
+  .filter((lesson) => modulosAnteriores.includes(lesson.moduleId))
+  .map((lesson) => ({ lessonId: lesson.id, completedAt: '2026-10-23T00:00:00Z' }));
+const aprovacoesAnteriores = exercicios
+  .filter((exercicio) => modulosAnteriores.includes(exercicio.moduleId))
+  .map(({ moduleId }) => ({ moduleId, melhorAcertos: 1, total: 1, aprovado: true, aprovadoEm: '2026-10-23T00:00:00Z' }));
 let tela;
 let falhas;
 let consultas;
@@ -48,7 +59,7 @@ let matriculado;
 beforeEach(() => {
   falhas = new Map();
   consultas = [];
-  completions = [];
+  completions = [...conclusoesAnteriores];
   matriculado = true;
   mensagens.length = 0;
   exercicios.forEach((exercicio, indice) => { exercicio.perguntas = perguntasOriginais[indice]; });
@@ -69,7 +80,7 @@ beforeEach(() => {
     if (url === '/api/auth/me') return Response.json({ user: { id: 'teste', email: 'teste@example.test', nome: null } });
     if (url === '/api/me/progress') return Response.json({ completions });
     if (url === '/api/me/matriculas') return Response.json({ matriculas: matriculado ? [{ courseId: courses[0].id, enrolledAt: '2026-10-23T00:00:00Z' }] : [] });
-    if (url === '/api/me/exercicios') return Response.json({ resultados: [] });
+    if (url === '/api/me/exercicios') return Response.json({ resultados: aprovacoesAnteriores });
     if (url === '/api/me/nivelamento') return Response.json({ disponivel: false, respondido: false });
     if (url.startsWith('/api/me/notes/')) return Response.json({ lessonId: url.split('/').at(-1), content: '', updatedAt: null });
     if (url.startsWith('/api/me/progress/')) return Response.json({ lessonId: url.split('/').at(-1), completedAt: '2026-10-23T00:00:00Z' });
@@ -138,7 +149,7 @@ test('nova tentativa continua exigindo matrícula', async () => {
 });
 
 test('nova tentativa mantém o bloqueio do módulo', async () => {
-  window.location.pathname = '/aula/' + lessons.find((lesson) => lesson.moduleId === modules[1].id).id;
+  window.location.pathname = '/aula/' + lessons.find((lesson) => lesson.moduleId === proximoModulo).id;
   falhas.set('/api/me/exercicios', 500);
   await montar(App);
   assert.ok(botao('Tentar novamente'));
@@ -171,8 +182,9 @@ for (const vazio of [true, false]) {
 
   test(`concluir módulo ${vazio ? 'não pede exercício vazio' : 'pede avaliação com perguntas'}`, async () => {
     if (vazio) exercicios[0].perguntas = [];
-    completions = lessons.filter((lesson) => lesson.moduleId === aula.moduleId && lesson.id !== aula.id)
-      .map((lesson) => ({ lessonId: lesson.id, completedAt: '2026-10-23T00:00:00Z' }));
+    completions = [...conclusoesAnteriores, ...lessons
+      .filter((lesson) => lesson.moduleId === aula.moduleId && lesson.id !== aula.id)
+      .map((lesson) => ({ lessonId: lesson.id, completedAt: '2026-10-23T00:00:00Z' }))];
     await montar(App);
     await act(async () => { await botao('Marcar como Concluído').props.onClick(); });
     assert.equal(mensagens.some(({ tipo, mensagem }) => tipo === 'info' && mensagem.includes('Faça a avaliação')), !vazio);
