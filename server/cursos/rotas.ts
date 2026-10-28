@@ -2,7 +2,7 @@ import express from 'express';
 import type pg from 'pg';
 import type { Catalogo, MatriculaDTO, UserDTO } from '../../shared/contracts.js';
 
-const LIMITE_DO_NOME = 120;
+export const LIMITE_DO_NOME = 120;
 
 // Montado depois de exigirLogin. O dono da matrícula e do perfil é sempre
 // req.session.userId: nenhum userId do corpo, da query ou do caminho é lido.
