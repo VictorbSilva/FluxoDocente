@@ -302,7 +302,7 @@ export default function App() {
       || currentSection === 'esqueci-senha' || currentSection === 'redefinir-senha'
     )) {
       if (currentSection === 'redefinir-senha') {
-        toast.info('Para redefinir a senha, clique em Sair e abra novamente o link do e-mail.');
+        toast.info('Para redefinir a senha, clique em Sair e abra novamente o link do e-mail.', { duration: 15_000 });
       }
       history.replaceState(null, '', '/');
       setCurrentSection('home');

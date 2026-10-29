@@ -94,9 +94,10 @@ export function criarRotasDeRecuperacao(
   });
 
   // Roda depois da resposta. Grava o token e manda o link, salvo se a conta não
-  // existe ou já recebeu um link nos últimos 2 minutos.
+  // existe ou já tem um pedido registrado nos últimos 2 minutos.
   async function enviarLink(configuracao: { enviar: EnviarEmail; appUrl: string }, emailLimpo: string): Promise<void> {
     const token = randomBytes(32).toString('base64url');
+    const tokenHash = hashDoToken(token);
     const client = await pool.connect();
     let usuario: { id: string; email: string; nome: string | null } | undefined;
 
@@ -125,23 +126,11 @@ export function criarRotasDeRecuperacao(
         return;
       }
 
-      await client.query('DELETE FROM password_resets WHERE user_id = $1 AND usado_em IS NULL', [usuario.id]);
+      // Reserva a janela de 2 minutos sem invalidar o link anterior.
       await client.query(
         "INSERT INTO password_resets (token_hash, user_id, expira_em) VALUES ($1, $2, now() + interval '1 hour')",
-        [hashDoToken(token), usuario.id],
+        [tokenHash, usuario.id],
       );
-      // Só confirma a troca do link após o envio. Se o SMTP falhar, o rollback
-      // preserva o link anterior e não inicia outra janela de 2 minutos.
-      // O bloqueio da conta também impede envios simultâneos duplicados.
-      const link = `${configuracao.appUrl}/redefinir-senha#token=${token}`;
-      const { texto, html } = montarEmail(usuario.nome ?? 'docente', link);
-      await configuracao.enviar({
-        para: usuario.email,
-        nomeDoDestinatario: usuario.nome,
-        assunto: ASSUNTO,
-        html,
-        texto,
-      });
       await client.query('COMMIT');
     } catch (erro) {
       await client.query('ROLLBACK');
@@ -149,6 +138,34 @@ export function criarRotasDeRecuperacao(
     } finally {
       client.release();
     }
+
+    // O SMTP espera sem manter conexão ou trava no banco. O token já está
+    // confirmado, então o link entregue funciona mesmo se a limpeza falhar.
+    const link = `${configuracao.appUrl}/redefinir-senha#token=${token}`;
+    const { texto, html } = montarEmail(usuario.nome ?? 'docente', link);
+    try {
+      await configuracao.enviar({
+        para: usuario.email,
+        nomeDoDestinatario: usuario.nome,
+        assunto: ASSUNTO,
+        html,
+        texto,
+      });
+    } catch (erro) {
+      // Libera uma nova tentativa e preserva todos os links anteriores.
+      await pool.query('DELETE FROM password_resets WHERE token_hash = $1', [tokenHash]);
+      throw erro;
+    }
+
+    // Apaga só links anteriores ainda não usados. Se outro pedido mais novo
+    // terminar primeiro, esta limpeza não pode apagar o link dele.
+    await pool.query(
+      `DELETE FROM password_resets AS antigo USING password_resets AS novo
+       WHERE novo.token_hash = $1 AND antigo.user_id = novo.user_id
+         AND antigo.token_hash <> novo.token_hash AND antigo.usado_em IS NULL
+         AND antigo.criado_em <= novo.criado_em`,
+      [tokenHash],
+    );
   }
 
   router.post('/senha/esqueci', limitarPedidosPorIp, limitarPedidosPorEmail, (req, res) => {

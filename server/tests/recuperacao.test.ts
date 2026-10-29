@@ -392,3 +392,82 @@ test('falha no envio preserva o link anterior e permite repetir imediatamente', 
   assert.equal(tentativas, 2);
   assert.equal((await redefinir(url, tokenDa(entregues[0]), SENHA_NOVA)).status, 200);
 });
+
+test('cinco pedidos simultâneos não ocupam o banco enquanto o SMTP espera', async () => {
+  const endereco = 'smtp-lento@exemplo.com';
+  const userId = await criarUsuario(endereco);
+  const hashAnterior = createHash('sha256').update('link-anterior-smtp-lento').digest('hex');
+  await pool.query(
+    `INSERT INTO password_resets (token_hash, user_id, criado_em, expira_em)
+     VALUES ($1, $2, now() - interval '3 minutes', now() + interval '1 hour')`,
+    [hashAnterior, userId],
+  );
+  let liberarEnvio!: () => void;
+  const envioPendente = new Promise<void>((resolve) => { liberarEnvio = resolve; });
+  const tentativas: Mensagem[] = [];
+  const { url } = await subirApp(true, async (mensagem) => {
+    tentativas.push(mensagem);
+    await envioPendente;
+  });
+  const cliente = novoCliente(url);
+  assert.equal((await cliente.enviar('POST', '/api/auth/login', {
+    corpo: { email: endereco, password: SENHA_ANTIGA },
+  })).status, 200);
+
+  let consulta: ReturnType<typeof cliente.enviar> | undefined;
+  let temporizador: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const respostas = await Promise.all(Array.from({ length: 5 }, () => pedir(url, endereco)));
+    assert.ok(respostas.every(({ status }) => status === 202));
+    await esperarMensagens(tentativas, 1);
+    consulta = cliente.enviar('GET', '/api/auth/me');
+    const resposta = await Promise.race([
+      consulta,
+      new Promise<null>((resolve) => { temporizador = setTimeout(() => resolve(null), 5000); }),
+    ]);
+    assert.ok(resposta, 'a sessão deve ser consultada sem esperar o SMTP terminar');
+    assert.equal(resposta.status, 200);
+    const { rows } = await pool.query('SELECT token_hash FROM password_resets WHERE user_id = $1', [userId]);
+    assert.equal(rows.length, 2, 'o link novo já está gravado e o anterior ainda está preservado');
+    assert.equal(tentativas.length, 1, 'os pedidos simultâneos enviam apenas uma mensagem');
+  } finally {
+    clearTimeout(temporizador);
+    liberarEnvio();
+    await consulta;
+    // Espera a limpeza posterior ao envio antes de encerrar o teste.
+    const limite = Date.now() + 5000;
+    while ((await pool.query('SELECT 1 FROM password_resets WHERE token_hash = $1', [hashAnterior])).rows.length) {
+      assert.ok(Date.now() < limite, 'o link anterior deve ser apagado após o envio');
+      await aguardar(10);
+    }
+  }
+  assert.equal((await redefinir(url, tokenDa(tentativas[0]), SENHA_NOVA)).status, 200);
+});
+
+test('link já está confirmado antes do SMTP e continua válido se a limpeza falhar', async (t) => {
+  const endereco = 'falha-limpeza@exemplo.com';
+  await criarUsuario(endereco);
+  let confirmadoAntesDoEnvio = false;
+  const entregues: Mensagem[] = [];
+  const queryOriginal = pool.query;
+  t.mock.method(pool, 'query', function (this: pg.Pool, ...args: any[]) {
+    if (typeof args[0] === 'string' && args[0].startsWith('DELETE FROM password_resets')) {
+      return Promise.reject(new Error('Falha na limpeza simulada'));
+    }
+    return (queryOriginal as Function).apply(this, args);
+  });
+  const erros = t.mock.method(console, 'error', () => {});
+  const { url } = await subirApp(true, async (mensagem) => {
+    const { rows } = await pool.query('SELECT 1 FROM password_resets WHERE token_hash = $1', [
+      createHash('sha256').update(tokenDa(mensagem)).digest('hex'),
+    ]);
+    confirmadoAntesDoEnvio = rows.length === 1;
+    entregues.push(mensagem);
+  });
+  assert.equal((await pedir(url, endereco)).status, 202);
+  await esperarMensagens(entregues, 1);
+  assert.equal(confirmadoAntesDoEnvio, true, 'o SMTP só pode começar após o commit');
+  for (let numero = 0; numero < 200 && erros.mock.callCount() === 0; numero++) await aguardar(10);
+  assert.equal(erros.mock.callCount(), 1);
+  assert.equal((await redefinir(url, tokenDa(entregues[0]), SENHA_NOVA)).status, 200);
+});

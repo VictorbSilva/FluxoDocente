@@ -19,7 +19,7 @@ const vite = await createServer({
       if (id === '\0toasts-recuperacao') return `
         export const mensagens = [];
         export const toast = Object.fromEntries(['info', 'error', 'success'].map(
-          tipo => [tipo, mensagem => mensagens.push({ tipo, mensagem })],
+          tipo => [tipo, (mensagem, opcoes) => mensagens.push({ tipo, mensagem, opcoes })],
         ));
         export const Toaster = () => null;
       `;
@@ -106,6 +106,7 @@ test('link aberto com sessão ativa avisa para sair e reabrir o e-mail antes de 
   assert.equal(endereco.pathname, '/');
   assert.equal(endereco.hash, '');
   assert.ok(mensagens.some(({ tipo, mensagem }) => tipo === 'info' && /Sair/.test(mensagem) && /link do e-mail/.test(mensagem)));
+  assert.ok(mensagens.find(({ tipo }) => tipo === 'info').opcoes?.duration >= 10_000);
   assert.equal(chamadas.some(({ url }) => url === '/api/auth/senha/redefinir'), false);
 });
 
