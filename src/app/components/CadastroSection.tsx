@@ -15,9 +15,10 @@ interface CadastroSectionProps {
     aceitouTermo: boolean;
   }) => Promise<void>;
   onEntrar: () => void;
+  onRecuperarSenha: () => void;
 }
 
-export function CadastroSection({ onCadastro, onEntrar }: CadastroSectionProps) {
+export function CadastroSection({ onCadastro, onEntrar, onRecuperarSenha }: CadastroSectionProps) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -26,11 +27,13 @@ export function CadastroSection({ onCadastro, onEntrar }: CadastroSectionProps) 
   const [termoAberto, setTermoAberto] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [emailEmUso, setEmailEmUso] = useState(false);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!aceitouTermo || enviando) return;
     setErro(null);
+    setEmailEmUso(false);
     if (senha !== confirmacao) {
       setErro('As senhas não conferem.');
       return;
@@ -41,6 +44,7 @@ export function CadastroSection({ onCadastro, onEntrar }: CadastroSectionProps) 
     } catch (err) {
       if (!(err instanceof ApiError)) throw err;
       setErro(err.message);
+      setEmailEmUso(err.status === 409 && err.code === 'email_em_uso');
     } finally {
       setEnviando(false);
     }
@@ -88,6 +92,9 @@ export function CadastroSection({ onCadastro, onEntrar }: CadastroSectionProps) 
               </div>
             </div>
             {erro && <p role='alert' className='text-sm text-red-600'>{erro}</p>}
+            {emailEmUso && (
+              <button type='button' onClick={onRecuperarSenha} className='text-sm text-[#177a7a] hover:underline'>Recuperar a senha</button>
+            )}
             <Button
               type='submit'
               disabled={!aceitouTermo || enviando}

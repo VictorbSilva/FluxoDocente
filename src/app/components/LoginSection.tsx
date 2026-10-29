@@ -10,9 +10,10 @@ import { LogoSimbolo } from './LogoSimbolo';
 interface LoginSectionProps {
   onLogin: (email: string, senha: string) => Promise<void>;
   onCriarConta: () => void;
+  onEsqueciSenha: () => void;
 }
 
-export function LoginSection({ onLogin, onCriarConta }: LoginSectionProps) {
+export function LoginSection({ onLogin, onCriarConta, onEsqueciSenha }: LoginSectionProps) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -86,9 +87,9 @@ export function LoginSection({ onLogin, onCriarConta }: LoginSectionProps) {
                 >
                   Senha
                 </Label>
-                <p className='text-xs text-gray-500'>
-                  Esqueceu a senha? Fale com a equipe do projeto.
-                </p>
+                <button type='button' onClick={onEsqueciSenha} className='text-xs text-[#177a7a] hover:underline'>
+                  Esqueci minha senha
+                </button>
               </div>
               <div className='relative'>
                 <Lock className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
