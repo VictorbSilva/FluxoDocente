@@ -162,12 +162,19 @@ O deploy atual é um **Web Service no plano gratuito**, região **Virginia**, co
 | `NODE_ENV` | `production` |
 | `DATABASE_URL` | URL **pooled** da branch `main` do Neon |
 | `SESSION_SECRET` | Segredo gerado para produção, com pelo menos 32 caracteres |
+| `GMAIL_USUARIO` | Endereço do Gmail do projeto, usado como remetente da recuperação de senha |
+| `GMAIL_SENHA_DE_APP` | Senha de app desse Gmail, gerada na conta Google com verificação em duas etapas; não é a senha de login |
+| `APP_URL` | Origem pública HTTPS do site, por exemplo `https://seu-servico.onrender.com`, usada no link do e-mail |
 
 O Render fornece a porta por `PORT`. Não configure `TEST_DATABASE_URL` para servir o site.
 
 O plano gratuito não tem Pre-Deploy Command, por isso as migrações ficam no Start Command. O serviço dorme depois de cerca de 15 minutos sem acesso e o primeiro acesso seguinte demora.
 
 **Antes de liberar o site aos docentes**, troque para o plano pago em **Settings → Instance Type**. Depois da troca, a migração pode ir para o Pre-Deploy Command (`npm run db:migrar:prod`), deixando o Start Command como `npm start`.
+
+**A recuperação de senha por SMTP do Gmail exige o plano pago** (decisão 17). O deploy atual gratuito precisa ser atualizado antes de testar o envio real. Sem as três variáveis de e-mail, a recuperação responde 503 em produção. Com elas configuradas no plano gratuito, a API pode responder 202 e mostrar a confirmação, mas o SMTP bloqueado impede a entrega; a falha aparece apenas no log. A confirmação não comprova o envio.
+
+Após mudar o plano e configurar as variáveis, faça um deploy e peça a recuperação de uma conta de teste. Confirme a chegada em um Gmail e em um endereço institucional, anotando caixa de entrada ou spam, e abra o link para concluir a troca. Se não chegar, confira os logs do Render e a senha de app antes de liberar o fluxo aos docentes.
 
 ## 10. Criar e resetar contas em produção
 
@@ -187,7 +194,7 @@ npm run usuarios -- resetar <email>
 npm.cmd run usuarios -- resetar <email> --escolher-senha
 ```
 
-Cada execução imprime o host; confira que continua sendo o da produção. O reset encerra as sessões da conta. Ao terminar, inclusive se o comando falhar, remova a variável temporária para voltar à URL do `.env`:
+Cada execução imprime o host; confira que continua sendo o da produção. O reset encerra as sessões da conta e invalida seus links pendentes de recuperação. Ao terminar, inclusive se o comando falhar, remova a variável temporária para voltar à URL do `.env`:
 
 ```powershell
 Remove-Item Env:DATABASE_URL

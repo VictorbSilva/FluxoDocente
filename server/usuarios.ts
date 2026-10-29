@@ -48,6 +48,7 @@ export async function resetarSenha(pool: pg.Pool, email: string, senha?: string)
     }
 
     await client.query("DELETE FROM session WHERE sess->>'userId' = $1", [rows[0].id]);
+    await client.query('DELETE FROM password_resets WHERE user_id = $1 AND usado_em IS NULL', [rows[0].id]);
     await client.query('COMMIT');
     return { email: normalizado, senha };
   } catch (erro) {

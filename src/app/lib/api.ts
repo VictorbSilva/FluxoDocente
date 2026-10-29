@@ -97,6 +97,20 @@ export async function cadastrar(dados: {
   return user;
 }
 
+export async function pedirRecuperacaoDeSenha(email: string): Promise<void> {
+  await requisitar<{ ok: true }>('/auth/senha/esqueci', {
+    method: 'POST',
+    body: { email },
+  });
+}
+
+export async function redefinirSenha(token: string, password: string): Promise<void> {
+  await requisitar<{ ok: true }>('/auth/senha/redefinir', {
+    method: 'POST',
+    body: { token, password },
+  });
+}
+
 export async function sessaoAtual(): Promise<UserDTO> {
   const { user } = await requisitar<{ user: UserDTO }>('/auth/me');
   return user;

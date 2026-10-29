@@ -12,7 +12,7 @@ before(async () => {
 });
 
 beforeEach(async () => {
-  await pool.query('TRUNCATE certificates, module_skips, exercise_results, placement_refusals, placement_answers, enrollments, lesson_notes, lesson_completions, users, session');
+  await pool.query('TRUNCATE password_resets, certificates, module_skips, exercise_results, placement_refusals, placement_answers, enrollments, lesson_notes, lesson_completions, users, session');
 });
 
 after(async () => {

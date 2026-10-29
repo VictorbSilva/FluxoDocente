@@ -4,10 +4,12 @@ import path from 'node:path';
 import type pg from 'pg';
 import type { Catalogo } from '../shared/contracts.js';
 import { criarRotasDeAnotacoes } from './anotacoes/rotas.js';
+import { criarRotasDeRecuperacao } from './auth/recuperacao.js';
 import { criarRotasDeAuth } from './auth/rotas.js';
 import { criarExigirLogin, criarMiddlewareDeSessao } from './auth/sessao.js';
 import { criarRotasDeCertificados } from './certificados/rotas.js';
 import { criarRotasDeCursos } from './cursos/rotas.js';
+import type { EnviarEmail } from './email/enviar.js';
 import type { Gabaritos } from './exercicios/gabarito.js';
 import { criarRotasDeExercicios } from './exercicios/rotas.js';
 import { criarRotasDoNivelamento } from './nivelamento/rotas.js';
@@ -21,6 +23,7 @@ export function createApp(opcoes: {
   sessionSecret: string;
   catalogo: Catalogo;
   gabaritos?: Gabaritos;
+  email?: { enviar: EnviarEmail; appUrl: string } | null;
 }): express.Express {
   const app = express();
   const { catalogo, gabaritos = { exercicios: {}, nivelamento: null } } = opcoes;
@@ -66,6 +69,7 @@ export function createApp(opcoes: {
   });
 
   app.use('/api/auth', criarRotasDeAuth(opcoes.pool, opcoes.production));
+  app.use('/api/auth', criarRotasDeRecuperacao(opcoes.pool, opcoes.email ?? null));
   app.use(
     '/api/me',
     criarExigirLogin(opcoes.pool, opcoes.production),

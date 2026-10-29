@@ -6,6 +6,8 @@ import { SobreNos } from './components/SobreNos';
 import { HeroSection } from './components/HeroSection';
 import { LoginSection } from './components/LoginSection';
 import { CadastroSection } from './components/CadastroSection';
+import { EsqueciSenhaSection } from './components/EsqueciSenhaSection';
+import { RedefinirSenhaSection } from './components/RedefinirSenhaSection';
 import { CategoryGrid } from './components/CategoryGrid';
 import { PERGUNTA_SAIR_SEM_SALVAR, VideoPlayer } from './components/VideoPlayer';
 import { Painel } from './components/Painel';
@@ -295,7 +297,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (sessao.estado === 'autenticada' && (currentSection === 'entrar' || currentSection === 'cadastro')) {
+    if (sessao.estado === 'autenticada' && (
+      currentSection === 'entrar' || currentSection === 'cadastro'
+      || currentSection === 'esqueci-senha' || currentSection === 'redefinir-senha'
+    )) {
+      if (currentSection === 'redefinir-senha') {
+        toast.info('Para redefinir a senha, clique em Sair e abra novamente o link do e-mail.', { duration: 15_000 });
+      }
       history.replaceState(null, '', '/');
       setCurrentSection('home');
     }
@@ -632,15 +640,21 @@ export default function App() {
     if (
       currentSection === 'entrar' ||
       currentSection === 'cadastro' ||
+      currentSection === 'esqueci-senha' ||
+      currentSection === 'redefinir-senha' ||
       SECOES_PRIVADAS.has(currentSection) ||
       selectedLessonId !== null
     ) {
       return (
         <>
           {currentSection === 'cadastro' ? (
-            <CadastroSection onCadastro={handleCadastro} onEntrar={() => irPara('entrar', null)} />
+            <CadastroSection onCadastro={handleCadastro} onEntrar={() => irPara('entrar', null)} onRecuperarSenha={() => irPara('esqueci-senha', null)} />
+          ) : currentSection === 'esqueci-senha' ? (
+            <EsqueciSenhaSection onEntrar={() => irPara('entrar', null)} />
+          ) : currentSection === 'redefinir-senha' ? (
+            <RedefinirSenhaSection onEntrar={() => irPara('entrar', null)} onPedirNovoLink={() => irPara('esqueci-senha', null)} />
           ) : (
-            <LoginSection onLogin={handleLogin} onCriarConta={() => irPara('cadastro', null)} />
+            <LoginSection onLogin={handleLogin} onCriarConta={() => irPara('cadastro', null)} onEsqueciSenha={() => irPara('esqueci-senha', null)} />
           )}
           {toaster}
         </>
