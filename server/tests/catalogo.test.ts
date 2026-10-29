@@ -53,6 +53,19 @@ test('IDs de curso são únicos', () => {
   assert.equal(new Set(courses.map((curso) => curso.id)).size, courses.length);
 });
 
+test('o curso ia-docencia informa o formulário de avaliação do TCC', () => {
+  assert.equal(courses.find((curso) => curso.id === 'ia-docencia')?.formularioUrl,
+    'https://forms.gle/AWuQdELspinFoiiU7');
+});
+
+test('o formulário do curso, quando existe, é um endereço https', () => {
+  for (const curso of courses) {
+    if (curso.formularioUrl !== undefined) {
+      assert.equal(new URL(curso.formularioUrl).protocol, 'https:', curso.id);
+    }
+  }
+});
+
 test('todo módulo citado por um curso existe', () => {
   const moduleIds = new Set(modules.map((modulo) => modulo.id));
 

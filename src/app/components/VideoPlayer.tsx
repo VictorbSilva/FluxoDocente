@@ -4,7 +4,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Award, CheckCircle, ChevronDown, Clock, Lock, Users } from 'lucide-react';
-import { modules, lessons } from '../../../shared/catalog';
+import { courses, modules, lessons } from '../../../shared/catalog';
 import { exercicios } from '../../../shared/exercicios';
 import type { Lesson, Module, ResultadoExercicioDTO } from '../../../shared/contracts';
 import { anotacao, salvarAnotacao } from '../lib/api';
@@ -118,6 +118,10 @@ export function VideoPlayer({
   };
 
   const concluida = concluidas.has(lesson.id);
+  const curso = courses.find((curso) => curso.moduleIds.includes(lesson.moduleId));
+  const formularioUrl = curso && curso.moduleIds[curso.moduleIds.length - 1] === lesson.moduleId
+    ? curso.formularioUrl
+    : undefined;
 
   const ordemGlobal = modules.flatMap((m) =>
     lessons.filter((l) => l.moduleId === m.id),
@@ -252,6 +256,20 @@ export function VideoPlayer({
               </div>
             </div>
           </Card>
+
+          {formularioUrl && (
+            <Card className='p-6'>
+              <h3 className='text-lg text-gray-900'>Avaliação do curso</h3>
+              <p className='text-gray-600'>
+                Conte como foi o curso para a pesquisa do TCC. Suas respostas mostram o que você percebeu de aprendizado e levam poucos minutos.
+              </p>
+              <Button asChild className='self-start bg-[#177a7a] hover:bg-[#136d6d]'>
+                <a href={formularioUrl} target='_blank' rel='noopener noreferrer'>
+                  Responder o formulário
+                </a>
+              </Button>
+            </Card>
+          )}
 
           {/* Notes */}
           <Card className='p-6'>

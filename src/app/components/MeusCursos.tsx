@@ -91,9 +91,18 @@ export function MeusCursos({
                     value={total ? (feitas / total) * 100 : 0}
                   />
                   {finalizado && (
-                    <Button variant='outline' onClick={() => onBaixarCertificado(curso.id)} className='self-start'>
-                      Baixar certificado
-                    </Button>
+                    <div className='flex flex-wrap gap-2'>
+                      <Button variant='outline' onClick={() => onBaixarCertificado(curso.id)}>
+                        Baixar certificado
+                      </Button>
+                      {curso.formularioUrl && (
+                        <Button asChild variant='outline'>
+                          <a href={curso.formularioUrl} target='_blank' rel='noopener noreferrer'>
+                            Responder o formulário
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </Card>
                 <CategoryGrid
