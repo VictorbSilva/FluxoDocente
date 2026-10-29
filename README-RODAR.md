@@ -152,7 +152,7 @@ Para publicar a alteração, gere um novo build e deploy. Os vídeos usam embed 
 
 ## 9. Deploy no Render
 
-O deploy atual é um **Web Service no plano gratuito**, região **Virginia**, com front e API na mesma origem. Configure:
+O deploy é um **Web Service no plano pago**, região **Virginia**, com front e API na mesma origem. Configure:
 
 | Campo | Valor |
 | --- | --- |
@@ -168,13 +168,11 @@ O deploy atual é um **Web Service no plano gratuito**, região **Virginia**, co
 
 O Render fornece a porta por `PORT`. Não configure `TEST_DATABASE_URL` para servir o site.
 
-O plano gratuito não tem Pre-Deploy Command, por isso as migrações ficam no Start Command. O serviço dorme depois de cerca de 15 minutos sem acesso e o primeiro acesso seguinte demora.
+As migrações ficam no Start Command desde o plano gratuito, que não tinha Pre-Deploy Command. No plano pago, a migração pode ir para o Pre-Deploy Command (`npm run db:migrar:prod`), deixando o Start Command como `npm start`. O plano pago não suspende o serviço por falta de acesso.
 
-**Antes de liberar o site aos docentes**, troque para o plano pago em **Settings → Instance Type**. Depois da troca, a migração pode ir para o Pre-Deploy Command (`npm run db:migrar:prod`), deixando o Start Command como `npm start`.
+**A recuperação de senha por SMTP do Gmail exige o plano pago** (decisão 17), porque o plano gratuito bloqueia o SMTP. Sem as três variáveis de e-mail, a recuperação responde 503 em produção. Com elas configuradas, a API responde 202 e mostra a confirmação antes de enviar; se o envio falhar, a falha aparece apenas no log. A confirmação não comprova o envio.
 
-**A recuperação de senha por SMTP do Gmail exige o plano pago** (decisão 17). O deploy atual gratuito precisa ser atualizado antes de testar o envio real. Sem as três variáveis de e-mail, a recuperação responde 503 em produção. Com elas configuradas no plano gratuito, a API pode responder 202 e mostrar a confirmação, mas o SMTP bloqueado impede a entrega; a falha aparece apenas no log. A confirmação não comprova o envio.
-
-Após mudar o plano e configurar as variáveis, faça um deploy e peça a recuperação de uma conta de teste. Confirme a chegada em um Gmail e em um endereço institucional, anotando caixa de entrada ou spam, e abra o link para concluir a troca. Se não chegar, confira os logs do Render e a senha de app antes de liberar o fluxo aos docentes.
+Depois de configurar as variáveis, faça um deploy e peça a recuperação de uma conta de teste. Confirme a chegada em um Gmail e em um endereço institucional, anotando caixa de entrada ou spam, e abra o link para concluir a troca. Se não chegar, confira os logs do Render e a senha de app antes de liberar o fluxo aos docentes.
 
 ## 10. Criar e resetar contas em produção
 

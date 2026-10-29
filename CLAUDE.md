@@ -8,7 +8,7 @@ Orientação para o Claude Code neste repositório.
 
 - Front-end em `src/`, ligado à API Node + Express + TypeScript em `server/`. O login é real, com sessão no Postgres, e o progresso por aula é salvo no banco para o usuário autenticado. Tipos e catálogo de módulos e aulas ficam em `shared/`.
 - `src/app/App.tsx` controla a interface, a autenticação e o progresso recebido da API. Quem não está logado vê a página de apresentação em `/`, entra por `/entrar`, cria a conta em `/cadastro` ou recupera a senha em `/esqueci-senha`. Logado, o início (`/`) é um painel com perfil e progresso, e as abas são `/meus-cursos`, `/mais-cursos` (matrícula), `/certificados` e `/sobre`; cada aula fica em `/aula/<id da aula>`. O player tem uma anotação por aula, salva pela API para o usuário autenticado. Não há materiais em PDF.
-- O Render serve o front compilado e a API `/api` na mesma origem. O deploy atual usa o plano gratuito, região Virginia; a troca para o plano pago está prevista antes da liberação aos docentes. O banco é Postgres no Neon (`aws-us-east-1`), com branches `main`, `dev` e `test`.
+- O Render serve o front compilado e a API `/api` na mesma origem. O deploy usa o plano pago, região Virginia. O banco é Postgres no Neon (`aws-us-east-1`), com branches `main`, `dev` e `test`.
 
 ## Stack
 

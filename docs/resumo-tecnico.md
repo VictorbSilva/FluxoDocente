@@ -32,4 +32,4 @@ As combinações de cores do tema foram ajustadas para contraste AA. As barras d
 
 ## Limitações conhecidas
 
-Não há recuperação de senha pelo próprio usuário: o responsável pelo piloto realiza o reset por script. O catálogo é editado no código, sem painel administrativo. Ainda não há anotações nem materiais em PDF. O deploy atual usa o plano gratuito do Render, que suspende o serviço após cerca de quinze minutos sem acesso e torna o primeiro acesso seguinte lento; a mudança para o plano pago está prevista antes da liberação aos docentes.
+Não há recuperação de senha pelo próprio usuário: o responsável pelo piloto realiza o reset por script. O catálogo é editado no código, sem painel administrativo. Ainda não há anotações nem materiais em PDF.
