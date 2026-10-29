@@ -44,8 +44,9 @@ async function subirApp(comEmail = true, enviarPersonalizado?: EnviarEmail): Pro
 }
 
 // O envio acontece depois da resposta, então o teste espera a mensagem chegar.
+// Com o banco de teste no Neon, o primeiro envio do arquivo leva cerca de 1,6 s.
 async function esperarMensagens(mensagens: Mensagem[], quantidade: number): Promise<void> {
-  const limite = Date.now() + 2000;
+  const limite = Date.now() + 10000;
 
   while (mensagens.length < quantidade) {
     if (Date.now() > limite) {

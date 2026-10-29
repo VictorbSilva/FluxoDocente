@@ -9,6 +9,7 @@ export const courses: Course[] = [
     description:
       'Curso on-line para docentes do ensino superior aprenderem a usar ferramentas de Inteligência Artificial de forma ética e prática, do planejamento das aulas à produção de materiais e à organização da rotina acadêmica.',
     moduleIds: ['introducao', 'modulo-1', 'modulo-2', 'modulo-3', 'modulo-4', 'encerramento'],
+    formularioUrl: 'https://forms.gle/AWuQdELspinFoiiU7',
   },
 ];
 

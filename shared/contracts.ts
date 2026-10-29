@@ -66,6 +66,8 @@ export interface Course {
   title: string;
   description: string;
   moduleIds: string[];
+  // Formulário de avaliação do TCC, mostrado no último módulo do curso, na janela de parabéns e no curso concluído.
+  formularioUrl?: string;
 }
 
 export interface Module {
