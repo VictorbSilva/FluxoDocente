@@ -64,7 +64,12 @@ export function RedefinirSenhaSection({ onEntrar, onPedirNovoLink }: RedefinirSe
         <CardContent className='pb-8'>
           {!token || tokenInvalido ? (
             <div className='space-y-4'>
-              <p role='alert' className='text-sm text-red-600'>{tokenInvalido ? erro : 'Link inválido. Peça um novo.'}</p>
+              <p role='alert' className='text-sm text-red-600'>{tokenInvalido ? erro : 'Abra o link do e-mail para criar uma senha nova.'}</p>
+              {!token && (
+                <p className='text-sm text-gray-700'>
+                  Se você recarregou esta página, reabra o link no e-mail recebido. Se precisar de outro link, aguarde 2 minutos entre os pedidos.
+                </p>
+              )}
               <button type='button' onClick={onPedirNovoLink} className='text-sm text-[#177a7a] hover:underline'>Pedir um novo link</button>
             </div>
           ) : (

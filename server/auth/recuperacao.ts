@@ -1,5 +1,5 @@
 import express from 'express';
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import { createHash, randomBytes } from 'node:crypto';
 import type pg from 'pg';
 import type { EnviarEmail } from '../email/enviar.js';
@@ -63,11 +63,25 @@ export function criarRotasDeRecuperacao(
 ): express.Router {
   const router = express.Router();
 
-  const limitarPedidos = rateLimit({
+  // Como no login, o teto por IP acomoda docentes na mesma rede do campus.
+  const limitarPedidosPorIp = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    handler: responderMuitasTentativas,
+  });
+
+  const limitarPedidosPorEmail = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 5,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
+    keyGenerator: (req) => {
+      const email: unknown = req.body?.email;
+      const emailLimpo = typeof email === 'string' ? email.trim().toLowerCase() : '';
+      return `${ipKeyGenerator(req.ip ?? '')}:${emailLimpo}`;
+    },
     handler: responderMuitasTentativas,
   });
 
@@ -116,6 +130,18 @@ export function criarRotasDeRecuperacao(
         "INSERT INTO password_resets (token_hash, user_id, expira_em) VALUES ($1, $2, now() + interval '1 hour')",
         [hashDoToken(token), usuario.id],
       );
+      // Só confirma a troca do link após o envio. Se o SMTP falhar, o rollback
+      // preserva o link anterior e não inicia outra janela de 2 minutos.
+      // O bloqueio da conta também impede envios simultâneos duplicados.
+      const link = `${configuracao.appUrl}/redefinir-senha#token=${token}`;
+      const { texto, html } = montarEmail(usuario.nome ?? 'docente', link);
+      await configuracao.enviar({
+        para: usuario.email,
+        nomeDoDestinatario: usuario.nome,
+        assunto: ASSUNTO,
+        html,
+        texto,
+      });
       await client.query('COMMIT');
     } catch (erro) {
       await client.query('ROLLBACK');
@@ -123,20 +149,9 @@ export function criarRotasDeRecuperacao(
     } finally {
       client.release();
     }
-
-    // O link usa o fragmento, que o navegador não manda ao servidor nem a outros sites.
-    const link = `${configuracao.appUrl}/redefinir-senha#token=${token}`;
-    const { texto, html } = montarEmail(usuario.nome ?? 'docente', link);
-    await configuracao.enviar({
-      para: usuario.email,
-      nomeDoDestinatario: usuario.nome,
-      assunto: ASSUNTO,
-      html,
-      texto,
-    });
   }
 
-  router.post('/senha/esqueci', limitarPedidos, (req, res) => {
+  router.post('/senha/esqueci', limitarPedidosPorIp, limitarPedidosPorEmail, (req, res) => {
     const enviado: unknown = req.body?.email;
     const emailLimpo = typeof enviado === 'string' ? enviado.trim().toLowerCase() : '';
 

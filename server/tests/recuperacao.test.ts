@@ -7,6 +7,7 @@ import type { AddressInfo } from 'node:net';
 import type pg from 'pg';
 import { createApp } from '../app.js';
 import { hashSenha } from '../auth/senha.js';
+import { resetarSenha } from '../usuarios.js';
 import type { EnviarEmail } from '../email/enviar.js';
 import { prepararBanco } from './ajuda.js';
 import { catalogoDeTeste } from './catalogo-de-teste.js';
@@ -25,7 +26,7 @@ let pool: pg.Pool;
 const servidores: Server[] = [];
 
 // Cada app tem o próprio limite por IP e a própria caixa de saída falsa.
-async function subirApp(comEmail = true): Promise<{ url: string; mensagens: Mensagem[] }> {
+async function subirApp(comEmail = true, enviarPersonalizado?: EnviarEmail): Promise<{ url: string; mensagens: Mensagem[] }> {
   const mensagens: Mensagem[] = [];
   const enviar: EnviarEmail = async (mensagem) => {
     mensagens.push(mensagem);
@@ -35,7 +36,7 @@ async function subirApp(comEmail = true): Promise<{ url: string; mensagens: Mens
     pool,
     sessionSecret: 'x'.repeat(40),
     catalogo: catalogoDeTeste,
-    email: comEmail ? { enviar, appUrl: APP_URL } : null,
+    email: comEmail ? { enviar: enviarPersonalizado ?? enviar, appUrl: APP_URL } : null,
   }).listen(0);
   servidores.push(servidor);
   await once(servidor, 'listening');
@@ -328,18 +329,66 @@ test('sem o cabeçalho X-FluxoDocente, as duas rotas recusam', async () => {
   assert.equal(mensagens.length, 0);
 });
 
-test('o 6º pedido seguido do mesmo IP devolve 429', async () => {
+test('o 6º pedido do mesmo IP e e-mail normalizado devolve 429 sem bloquear outro docente', async () => {
   const { url } = await subirApp();
 
   for (let numero = 1; numero <= 5; numero++) {
-    assert.equal((await pedir(url, `limite${numero}@exemplo.com`)).status, 202, `pedido ${numero}`);
+    assert.equal((await pedir(url, numero % 2 ? 'limite@exemplo.com' : ' Limite@Exemplo.com ')).status, 202, `pedido ${numero}`);
   }
 
-  const bloqueado = await pedir(url, 'limite6@exemplo.com');
+  const bloqueado = await pedir(url, 'limite@exemplo.com');
   assert.equal(bloqueado.status, 429);
   assert.deepEqual(bloqueado.corpo, {
     error: { code: 'muitas_tentativas', message: 'Muitas tentativas. Aguarde 15 minutos.' },
   });
+  assert.equal((await pedir(url, 'outro-docente@exemplo.com')).status, 202);
   // Deixa terminar as buscas feitas depois das respostas antes de fechar o pool.
   await aguardar(200);
+});
+
+test('o IP compartilhado permite 100 pedidos de e-mails distintos e bloqueia o 101º', async () => {
+  const { url } = await subirApp();
+  for (let numero = 1; numero <= 100; numero++) {
+    assert.equal((await pedir(url, `campus${numero}@exemplo.com`)).status, 202, `pedido ${numero}`);
+  }
+  assert.equal((await pedir(url, 'campus101@exemplo.com')).status, 429);
+  await aguardar(200);
+});
+
+test('reset administrativo invalida o link pendente sem afetar o de outra conta', async () => {
+  const { url, mensagens } = await subirApp();
+  await criarUsuario('reset-script@exemplo.com');
+  await criarUsuario('outro-script@exemplo.com');
+  const token = await pedirLink(url, mensagens, 'reset-script@exemplo.com');
+  const outroToken = await pedirLink(url, mensagens, 'outro-script@exemplo.com');
+  await resetarSenha(pool, 'reset-script@exemplo.com', SENHA_NOVA);
+  assert.deepEqual((await redefinir(url, token, 'nao-deve-valer')).corpo, TOKEN_INVALIDO);
+  assert.equal((await login(url, 'reset-script@exemplo.com', SENHA_NOVA)).status, 200);
+  assert.equal((await redefinir(url, outroToken, SENHA_NOVA)).status, 200);
+});
+
+test('falha no envio preserva o link anterior e permite repetir imediatamente', async (t) => {
+  const userId = await criarUsuario('falha-envio@exemplo.com');
+  const tokenAnterior = 'link-anterior-a-falha';
+  await pool.query(
+    `INSERT INTO password_resets (token_hash, user_id, criado_em, expira_em)
+     VALUES ($1, $2, now() - interval '3 minutes', now() + interval '1 hour')`,
+    [createHash('sha256').update(tokenAnterior).digest('hex'), userId],
+  );
+  let tentativas = 0;
+  const entregues: Mensagem[] = [];
+  const erros = t.mock.method(console, 'error', () => {});
+  const { url } = await subirApp(true, async (mensagem) => {
+    tentativas++;
+    if (tentativas === 1) throw new Error('Falha SMTP simulada');
+    entregues.push(mensagem);
+  });
+  assert.equal((await pedir(url, 'falha-envio@exemplo.com')).status, 202);
+  for (let numero = 0; numero < 200 && erros.mock.callCount() === 0; numero++) await aguardar(10);
+  assert.equal(erros.mock.callCount(), 1, 'o envio com falha deve terminar antes de conferir o banco');
+  assert.equal((await redefinir(url, tokenAnterior, SENHA_NOVA)).status, 200, 'o link anterior continua válido');
+  assert.equal((await pedir(url, 'falha-envio@exemplo.com')).status, 202);
+  await esperarMensagens(entregues, 1);
+  assert.equal(tentativas, 2);
+  assert.equal((await redefinir(url, tokenDa(entregues[0]), SENHA_NOVA)).status, 200);
 });

@@ -301,6 +301,9 @@ export default function App() {
       currentSection === 'entrar' || currentSection === 'cadastro'
       || currentSection === 'esqueci-senha' || currentSection === 'redefinir-senha'
     )) {
+      if (currentSection === 'redefinir-senha') {
+        toast.info('Para redefinir a senha, clique em Sair e abra novamente o link do e-mail.');
+      }
       history.replaceState(null, '', '/');
       setCurrentSection('home');
     }
