@@ -188,3 +188,18 @@ test('a 11ª tentativa de login seguida devolve 429', async () => {
   assert.equal(bloqueada.status, 429);
   assert.equal(bloqueada.corpo.error.code, 'muitas_tentativas');
 });
+
+test('10 erros com um e-mail não bloqueiam outro e-mail do mesmo IP', async () => {
+  const cliente = novoCliente(await subirApp());
+  const tentar = (email: string) => cliente.enviar('POST', '/api/auth/login', {
+    corpo: { email, password: 'senha-errada' },
+  });
+
+  for (let tentativa = 1; tentativa <= 10; tentativa++) {
+    assert.equal((await tentar('docente@exemplo.com')).status, 401, `tentativa ${tentativa}`);
+  }
+
+  const outroEmail = await tentar('fulano@x.com');
+  assert.equal(outroEmail.status, 401);
+  assert.equal(outroEmail.corpo.error.code, 'credenciais_invalidas');
+});

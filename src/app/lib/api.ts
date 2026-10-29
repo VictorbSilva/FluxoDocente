@@ -84,6 +84,19 @@ export async function entrar(email: string, senha: string): Promise<UserDTO> {
   return user;
 }
 
+export async function cadastrar(dados: {
+  nome: string;
+  email: string;
+  password: string;
+  aceitouTermo: boolean;
+}): Promise<UserDTO> {
+  const { user } = await requisitar<{ user: UserDTO }>('/auth/cadastro', {
+    method: 'POST',
+    body: dados,
+  });
+  return user;
+}
+
 export async function sessaoAtual(): Promise<UserDTO> {
   const { user } = await requisitar<{ user: UserDTO }>('/auth/me');
   return user;

@@ -9,9 +9,10 @@ import { LogoSimbolo } from './LogoSimbolo';
 
 interface LoginSectionProps {
   onLogin: (email: string, senha: string) => Promise<void>;
+  onCriarConta: () => void;
 }
 
-export function LoginSection({ onLogin }: LoginSectionProps) {
+export function LoginSection({ onLogin, onCriarConta }: LoginSectionProps) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -124,6 +125,10 @@ export function LoginSection({ onLogin }: LoginSectionProps) {
               <ArrowRight className='ml-2 h-4 w-4' />
             </Button>
           </form>
+          <p className='mt-4 text-center text-sm text-gray-500'>
+            Ainda não tem conta?{' '}
+            <button type='button' onClick={onCriarConta} className='text-[#177a7a] hover:underline'>Criar conta</button>
+          </p>
         </CardContent>
       </Card>
     </div>

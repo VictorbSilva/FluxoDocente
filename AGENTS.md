@@ -7,7 +7,7 @@ Orientação para o Codex neste repositório.
 **FluxoDocente**: site instrucional do TCC de Victor sobre letramento digital de docentes do ensino superior em ferramentas de IA. A base foi gerada no Figma Make (veja `src/app/Attributions.md`: componentes shadcn/ui e fotos do Unsplash).
 
 - Front-end em `src/`, ligado à API Node + Express + TypeScript em `server/`. O login é real, com sessão no Postgres, e o progresso por aula é salvo no banco para o usuário autenticado. Tipos e catálogo de módulos e aulas ficam em `shared/`.
-- `src/app/App.tsx` controla a interface, a autenticação e o progresso recebido da API. Quem não está logado vê a página de apresentação em `/` e entra por `/entrar`. Logado, o início (`/`) é um painel com perfil e progresso, e as abas são `/meus-cursos`, `/mais-cursos` (matrícula), `/certificados` e `/sobre`; cada aula fica em `/aula/<id da aula>`. O player tem uma anotação por aula, salva pela API para o usuário autenticado. Não há materiais em PDF.
+- `src/app/App.tsx` controla a interface, a autenticação e o progresso recebido da API. Quem não está logado vê a página de apresentação em `/` e entra por `/entrar` ou cria a conta em `/cadastro`. Logado, o início (`/`) é um painel com perfil e progresso, e as abas são `/meus-cursos`, `/mais-cursos` (matrícula), `/certificados` e `/sobre`; cada aula fica em `/aula/<id da aula>`. O player tem uma anotação por aula, salva pela API para o usuário autenticado. Não há materiais em PDF.
 - O Render serve o front compilado e a API `/api` na mesma origem. O deploy atual usa o plano gratuito, região Virginia; a troca para o plano pago está prevista antes da liberação aos docentes. O banco é Postgres no Neon (`aws-us-east-1`), com branches `main`, `dev` e `test`.
 
 ## Stack
@@ -58,6 +58,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `npm run usuarios -- criar <email>`: cria conta e mostra uma senha aleatória uma vez.
 - `npm.cmd run usuarios -- criar <email> --escolher-senha`: cria conta com senha digitada e confirmada.
 - `npm run usuarios -- resetar <email>`: troca a senha e encerra as sessões da conta; aceita `--escolher-senha` com `npm.cmd`.
+- `npm run usuarios -- excluir <email>`: apaga a conta e todos os dados dela, depois de pedir o e-mail de novo; atende os pedidos de exclusão do termo.
 - `npm run usuarios -- listar`: lista e-mails e datas de criação.
 - `npm test`: testes do servidor e do catálogo.
 - `npm run test:front`: testes da tela; não precisam de banco.
@@ -84,7 +85,7 @@ Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). Testes da tela:
 1. Backend em Node + Express + TypeScript, no mesmo repositório e no mesmo `package.json` do front. Motivo: mesma linguagem do front, custo menor e é o que Victor usa no dia a dia. O texto do TCC, que cita Django, será corrigido no texto.
 2. Render (web service pago) serve o front compilado e a API `/api` na mesma origem; banco Neon Postgres no plano gratuito. Motivo: uma origem só dispensa CORS e simplifica o cookie.
 3. Sessão com `express-session` + `connect-pg-simple` no Postgres; cookie `fd.sid` HttpOnly, SameSite=Lax, Secure em produção, 7 dias, sem renovação automática. Motivo: sessão revogável no logout e no reset de senha.
-4. Contas pré-criadas por script; sem cadastro público e sem recuperação de senha por e-mail. O reset é feito por Victor. Motivo: piloto fechado e prazo.
+4. Restrição a contas pré-criadas por script, sem cadastro público: superada pela decisão 16. Sem recuperação de senha por e-mail; o reset é feito por Victor. Motivo da decisão original: piloto fechado e prazo.
 5. Conclusão de aula é autodeclarada pelo botão "Marcar como Concluído". Nenhum evento do player conclui aula e não existe "desmarcar". Motivo: não inventar regra pedagógica.
 6. Sem gamificação: pontos, níveis, metas, sequências, recorde e anotações de exemplo saem da interface. Fica o progresso por aula e por módulo. O certificado de conclusão do curso foi pedido pelo orientador em 16/10 e entra no bloco 5.
 7. Vídeos pelo embed do YouTube (iframe de `youtube-nocookie.com`), sem YouTube Data API e sem hospedagem de mídia.
@@ -96,6 +97,7 @@ Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). Testes da tela:
 13. Nivelamento: oferecido uma única vez, depois do login; o docente responde ou recusa, e nos dois casos o questionário não aparece de novo. Respostas, acertos e recusas ficam no banco como dado da pesquisa e nunca são mostrados ao docente; a API devolve só os módulos que ele pode pular. Precisa constar no termo de consentimento. Motivo de aparecer uma vez só: decisão de Victor (26/10).
 14. Dispensa pelo diagnóstico: com 80% ou mais de acertos nas questões de um módulo no questionário diagnóstico (4 ou 5 de 5), o docente pode pular esse módulo quando ele estiver liberado. Pular é opcional e não se desfaz; o módulo dispensado conta como completo para liberar o seguinte e para concluir o curso. Motivo: decisão de Victor (23/10).
 15. Certificado: emitido pela API só para curso concluído (decisões 11 e 14), com o nome da conta; código de 10 caracteres, carga horária em horas inteiras arredondadas e data gravados na primeira emissão. O PDF é gerado no navegador; o CPF é digitado na hora, vai só para o PDF e nunca é enviado nem guardado. Assinatura: Equipe Fluxo Docente. Motivo: pedido de Victor (26/10).
+16. Cadastro aberto: o docente cria a conta com nome, e-mail e senha e aceita o termo de consentimento no formulário; a API grava a data e a versão do aceite (`VERSAO_DO_TERMO`, em shared/termo.ts). Sem confirmação de e-mail. Contas criadas pelo script ficam sem aceite. Pedidos de exclusão são atendidos pelo script (`npm run usuarios -- excluir`). Motivo: divulgação do site num grupo de professores (Victor, 28/10).
 
 ## Executar tarefa
 

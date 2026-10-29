@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { LogoSimbolo } from './LogoSimbolo';
+import { TermoDialog } from './TermoDialog';
 
 interface RodapeProps {
   autenticado: boolean;
@@ -6,6 +8,7 @@ interface RodapeProps {
 }
 
 export function Rodape({ autenticado, onSectionChange }: RodapeProps) {
+  const [termoAberto, setTermoAberto] = useState(false);
   const classeLink = 'rounded-sm text-left transition-colors hover:text-[#6cf3d5] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#6cf3d5]';
 
   return (
@@ -30,6 +33,7 @@ export function Rodape({ autenticado, onSectionChange }: RodapeProps) {
             <ul className='space-y-2 text-sm text-gray-300'>
               <li><button type='button' className={classeLink} onClick={() => onSectionChange('home')}>Início</button></li>
               <li><button type='button' className={classeLink} onClick={() => onSectionChange('sobre')}>Sobre nós</button></li>
+              <li><button type='button' className={classeLink} onClick={() => setTermoAberto(true)}>Termo de consentimento</button></li>
               {!autenticado && (
                 <li><button type='button' className={classeLink} onClick={() => onSectionChange('entrar')}>Entrar</button></li>
               )}
@@ -64,6 +68,7 @@ export function Rodape({ autenticado, onSectionChange }: RodapeProps) {
           </p>
         </div>
       </div>
+      <TermoDialog aberto={termoAberto} onFechar={() => setTermoAberto(false)} />
     </footer>
   );
 }

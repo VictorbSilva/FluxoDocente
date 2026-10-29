@@ -4,16 +4,17 @@ import { LogoSimbolo } from './LogoSimbolo';
 
 interface CabecalhoPublicoProps {
   onEntrar: () => void;
+  onCriarConta: () => void;
 }
 
-export function CabecalhoPublico({ onEntrar }: CabecalhoPublicoProps) {
+export function CabecalhoPublico({ onEntrar, onCriarConta }: CabecalhoPublicoProps) {
   return (
     <header
       style={{ background: 'linear-gradient(to right, #2b364a, #177a7a)' }}
       className='text-white shadow-lg sticky top-0 z-50'
     >
       <div className='max-w-7xl mx-auto px-4 py-3'>
-        <div className='flex items-center justify-between'>
+        <div className='flex flex-wrap items-center justify-between gap-3'>
           {/* Logo */}
           <div className='flex items-center gap-3'>
             <LogoSimbolo className='h-9 w-auto' />
@@ -41,6 +42,13 @@ export function CabecalhoPublico({ onEntrar }: CabecalhoPublicoProps) {
             >
               <LogIn className='h-4 w-4' />
               Entrar
+            </Button>
+            <Button
+              size='sm'
+              className='bg-white text-[#2b364a] hover:bg-white/90'
+              onClick={onCriarConta}
+            >
+              Criar conta
             </Button>
           </div>
         </div>

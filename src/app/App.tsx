@@ -5,6 +5,7 @@ import { Rodape } from './components/Rodape';
 import { SobreNos } from './components/SobreNos';
 import { HeroSection } from './components/HeroSection';
 import { LoginSection } from './components/LoginSection';
+import { CadastroSection } from './components/CadastroSection';
 import { CategoryGrid } from './components/CategoryGrid';
 import { PERGUNTA_SAIR_SEM_SALVAR, VideoPlayer } from './components/VideoPlayer';
 import { Painel } from './components/Painel';
@@ -25,6 +26,7 @@ import { cursoConcluido, cursoDoModulo, moduloCompleto, moduloLiberado } from '.
 import type { CorrecaoDTO, MatriculaDTO, NivelamentoDTO, ResultadoExercicioDTO, UserDTO } from '../../shared/contracts';
 import {
   ApiError,
+  cadastrar,
   concluirAula,
   dispensarModulo,
   entrar,
@@ -285,8 +287,15 @@ export default function App() {
     }
   };
 
+  const handleCadastro = async (dados: Parameters<typeof cadastrar>[0]) => {
+    const usuario = await cadastrar(dados);
+    setSessao({ estado: 'autenticada', usuario });
+    history.replaceState(null, '', '/');
+    setCurrentSection('home');
+  };
+
   useEffect(() => {
-    if (sessao.estado === 'autenticada' && currentSection === 'entrar') {
+    if (sessao.estado === 'autenticada' && (currentSection === 'entrar' || currentSection === 'cadastro')) {
       history.replaceState(null, '', '/');
       setCurrentSection('home');
     }
@@ -622,12 +631,17 @@ export default function App() {
   if (sessao.estado === 'anonima') {
     if (
       currentSection === 'entrar' ||
+      currentSection === 'cadastro' ||
       SECOES_PRIVADAS.has(currentSection) ||
       selectedLessonId !== null
     ) {
       return (
         <>
-          <LoginSection onLogin={handleLogin} />
+          {currentSection === 'cadastro' ? (
+            <CadastroSection onCadastro={handleCadastro} onEntrar={() => irPara('entrar', null)} />
+          ) : (
+            <LoginSection onLogin={handleLogin} onCriarConta={() => irPara('cadastro', null)} />
+          )}
           {toaster}
         </>
       );
@@ -635,9 +649,9 @@ export default function App() {
 
     return (
       <div className='min-h-screen bg-white'>
-        <CabecalhoPublico onEntrar={() => irPara('entrar', null)} />
+        <CabecalhoPublico onEntrar={() => irPara('entrar', null)} onCriarConta={() => irPara('cadastro', null)} />
         <main>
-          <HeroSection onGetStarted={() => irPara('entrar', null)} />
+          <HeroSection onGetStarted={() => irPara('cadastro', null)} />
           <CategoryGrid onCategorySelect={() => irPara('entrar', null)} />
           <SobreNos />
         </main>

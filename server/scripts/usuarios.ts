@@ -2,7 +2,7 @@ import '../config.js';
 import { createInterface } from 'node:readline/promises';
 import { lerDatabaseUrl } from '../config.js';
 import { criarPool } from '../db/pool.js';
-import { criarUsuario, listarUsuarios, resetarSenha } from '../usuarios.js';
+import { criarUsuario, excluirUsuario, listarUsuarios, resetarSenha } from '../usuarios.js';
 
 async function usuarios(): Promise<void> {
   const comando = process.argv[2];
@@ -12,10 +12,11 @@ async function usuarios(): Promise<void> {
   const usoValido = process.argv.length <= 5 && (
     (comando === 'listar' && email === undefined && opcao === undefined)
     || ((comando === 'criar' || comando === 'resetar') && !!email?.trim() && (opcao === undefined || escolherSenha))
+    || (comando === 'excluir' && !!email?.trim() && opcao === undefined)
   );
 
   if (!usoValido) {
-    console.error('Uso:\n  npm run usuarios -- criar <e-mail> [--escolher-senha]\n  npm run usuarios -- resetar <e-mail> [--escolher-senha]\n  npm run usuarios -- listar');
+    console.error('Uso:\n  npm run usuarios -- criar <e-mail> [--escolher-senha]\n  npm run usuarios -- resetar <e-mail> [--escolher-senha]\n  npm run usuarios -- excluir <e-mail>\n  npm run usuarios -- listar');
     process.exitCode = 1;
     return;
   }
@@ -27,6 +28,24 @@ async function usuarios(): Promise<void> {
   try {
     if (comando === 'listar') {
       console.table(await listarUsuarios(pool));
+      return;
+    }
+
+    if (comando === 'excluir') {
+      const terminal = createInterface({ input: process.stdin, output: process.stdout });
+      try {
+        const confirmacao = await terminal.question('Digite o e-mail de novo para confirmar a exclusão:');
+        if (confirmacao.trim().toLowerCase() !== email!.trim().toLowerCase()) {
+          console.error('Exclusão cancelada.');
+          process.exitCode = 1;
+          return;
+        }
+      } finally {
+        terminal.close();
+      }
+
+      const conta = await excluirUsuario(pool, email!);
+      console.log(`Conta ${conta.email} excluída, com o progresso, as anotações, as avaliações, o diagnóstico e o certificado.`);
       return;
     }
 
