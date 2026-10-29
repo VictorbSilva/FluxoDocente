@@ -26,7 +26,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `shared/progressao.ts`: regra de liberação de módulos e de conclusão do curso, usada pela API e pela tela.
 - `shared/exercicios.ts` e `shared/nivelamento.ts`: perguntas, sem gabarito.
 - `server/app.ts`: monta o Express, os cabeçalhos de segurança, a proteção contra CSRF, as sessões, as rotas `/api` e o front estático com fallback para `index.html` em produção.
-- `server/config.ts`: carrega o `.env` fora de produção e lê porta, URL do banco e segredo de sessão.
+- `server/config.ts`: carrega o `.env` fora de produção e lê porta, URL do banco, segredo de sessão e a configuração de e-mail (`GMAIL_USUARIO`, `GMAIL_SENHA_DE_APP` e `APP_URL`).
 - `server/index.ts`: inicia o servidor com o pool do banco e o catálogo.
 - `server/auth/`: login, sessão atual, logout, hash de senha com scrypt e verificação de sessão.
 - `server/progresso/`: consulta e conclusão de aulas para o dono da sessão.
@@ -34,6 +34,7 @@ React 18, Vite 6, TypeScript 5.8 (`strict: false` no front), Tailwind 4 via `@ta
 - `server/certificados/`: emissão do certificado de conclusão do curso.
 - `server/exercicios/` e `server/nivelamento/`: rotas e gabaritos; nunca importados por `src/`.
 - `server/db/`: pool do Postgres e aplicação das migrações.
+- `server/email/`: envio de e-mail pelo Gmail (nodemailer) ou, em desenvolvimento sem configuração, pelo console.
 - `server/migrations/`: migrações SQL de contas, sessões e conclusões de aulas.
 - `server/usuarios.ts`: criação e listagem de contas, geração de senha e reset com revogação das sessões.
 - `server/scripts/`: comandos de migração e administração de contas.
@@ -98,6 +99,7 @@ Testes do servidor: `npm test` (precisa de `TEST_DATABASE_URL`). Testes da tela:
 14. Dispensa pelo diagnóstico: com 80% ou mais de acertos nas questões de um módulo no questionário diagnóstico (4 ou 5 de 5), o docente pode pular esse módulo quando ele estiver liberado. Pular é opcional e não se desfaz; o módulo dispensado conta como completo para liberar o seguinte e para concluir o curso. Motivo: decisão de Victor (23/10).
 15. Certificado: emitido pela API só para curso concluído (decisões 11 e 14), com o nome da conta; código de 10 caracteres, carga horária em horas inteiras arredondadas e data gravados na primeira emissão. O PDF é gerado no navegador; o CPF é digitado na hora, vai só para o PDF e nunca é enviado nem guardado. Assinatura: Equipe Fluxo Docente. Motivo: pedido de Victor (26/10).
 16. Cadastro aberto: o docente cria a conta com nome, e-mail e senha e aceita o termo de consentimento no formulário; a API grava a data e a versão do aceite (`VERSAO_DO_TERMO`, em shared/termo.ts). Sem confirmação de e-mail. Contas criadas pelo script ficam sem aceite. Pedidos de exclusão são atendidos pelo script (`npm run usuarios -- excluir`). Motivo: divulgação do site num grupo de professores (Victor, 28/10).
+17. Recuperação de senha por e-mail: link de uso único, válido por 1 hora, com o token guardado só como hash; pedir a recuperação responde sempre igual, exista a conta ou não. Envio por SMTP de um Gmail do projeto com senha de app (nodemailer), o que exige o Render pago; configurado por GMAIL_USUARIO, GMAIL_SENHA_DE_APP e APP_URL. Motivo: cadastro aberto (Victor, 28/10).
 
 ## Executar tarefa
 

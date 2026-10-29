@@ -12,7 +12,7 @@ import { criarExigirLogin, responderNaoAutenticado } from './sessao.js';
 // o tempo de resposta não revele se a conta existe.
 const hashDeEmailInexistente = hashSenha(randomBytes(32).toString('hex'));
 
-const FORMATO_DO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const FORMATO_DO_EMAIL =/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function responderCredenciaisInvalidas(res: express.Response): void {
   res.status(401).json({
