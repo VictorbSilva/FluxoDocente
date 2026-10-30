@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { catalogo, courses, modules, lessons } from '../../shared/catalog.js';
@@ -8,6 +8,47 @@ import type { PerguntaDTO } from '../../shared/contracts.js';
 import { cargaHorariaEmHoras, duracaoDoCursoEmSegundos, formatarDuracao } from '../../shared/duracao.js';
 import { gabaritoDosExercicios } from '../exercicios/gabarito.js';
 import { gabaritoDoNivelamento } from '../nivelamento/gabarito.js';
+import { praticas } from '../../shared/praticas.js';
+
+test('toda prática aponta para um módulo existente e cada módulo tem no máximo uma', () => {
+  const moduleIds = new Set(modules.map((modulo) => modulo.id));
+  assert.equal(new Set(praticas.map((pratica) => pratica.moduleId)).size, praticas.length);
+
+  for (const pratica of praticas) {
+    assert.ok(moduleIds.has(pratica.moduleId), pratica.moduleId);
+  }
+});
+
+test('toda prática tem objetivo, exercícios, checklist e reflexão, sem texto vazio', () => {
+  for (const pratica of praticas) {
+    assert.ok(pratica.objetivo.trim().length > 0, pratica.moduleId);
+    assert.ok(pratica.exercicios.length > 0, pratica.moduleId);
+    assert.ok(pratica.checklist.length > 0, pratica.moduleId);
+    assert.ok(pratica.reflexao.length > 0, pratica.moduleId);
+
+    for (const texto of [...pratica.checklist, ...pratica.reflexao]) {
+      assert.ok(texto.trim().length > 0, pratica.moduleId);
+    }
+
+    for (const exercicio of pratica.exercicios) {
+      assert.ok(exercicio.titulo.trim().length > 0, pratica.moduleId);
+      assert.ok(exercicio.resumo.trim().length > 0, exercicio.titulo);
+      assert.ok(exercicio.tarefas.length > 0, exercicio.titulo);
+      if (exercicio.foco !== undefined) {
+        assert.ok(exercicio.foco.trim().length > 0, exercicio.titulo);
+      }
+      for (const tarefa of exercicio.tarefas) {
+        assert.ok(tarefa.trim().length > 0, exercicio.titulo);
+      }
+    }
+  }
+});
+
+test('o PDF de toda prática existe em public/', () => {
+  for (const pratica of praticas) {
+    assert.ok(existsSync(path.join(process.cwd(), 'public', pratica.pdf)), pratica.pdf);
+  }
+});
 
 test('IDs de módulo são únicos', () => {
   assert.equal(new Set(modules.map((modulo) => modulo.id)).size, modules.length);
