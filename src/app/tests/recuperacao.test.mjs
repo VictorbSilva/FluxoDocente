@@ -43,7 +43,7 @@ beforeEach(() => {
   responder = () => Response.json({ ok: true });
   globalThis.window = {
     get location() { return endereco; },
-    addEventListener() {}, removeEventListener() {},
+    addEventListener() {}, removeEventListener() {}, scrollTo() {},
   };
   globalThis.history = {
     replaceState(_state, _title, path) { endereco = new URL(path, endereco); },

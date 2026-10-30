@@ -67,6 +67,7 @@ beforeEach(() => {
     location: { pathname: '/aula/' + aula.id },
     addEventListener() {},
     removeEventListener() {},
+    scrollTo() {},
   };
   globalThis.history = {
     replaceState(_state, _title, path) { window.location.pathname = path; },
