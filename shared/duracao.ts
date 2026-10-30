@@ -21,8 +21,14 @@ export function duracaoDoCursoEmSegundos(courseId: string, fonte: Fonte = catalo
   return (curso?.moduleIds ?? []).reduce((total, id) => total + duracaoDoModuloEmSegundos(id, fonte), 0);
 }
 
-// Carga horária do certificado: horas inteiras arredondadas, no mínimo 1.
+// Carga horária do certificado: a declarada no curso; sem ela, a duração em horas inteiras arredondadas, no mínimo 1.
 export function cargaHorariaEmHoras(courseId: string, fonte: Fonte = catalogo): number {
+  const curso = fonte.courses.find((c) => c.id === courseId);
+
+  if (curso?.cargaHorariaHoras !== undefined) {
+    return curso.cargaHorariaHoras;
+  }
+
   return Math.max(1, Math.round(duracaoDoCursoEmSegundos(courseId, fonte) / 3600));
 }
 

@@ -68,6 +68,8 @@ export interface Course {
   moduleIds: string[];
   // Formulário de avaliação do TCC, mostrado no último módulo do curso, na janela de parabéns e no curso concluído.
   formularioUrl?: string;
+  // Carga horária declarada no certificado, em horas inteiras. Sem ela, vale a duração do curso arredondada.
+  cargaHorariaHoras?: number;
 }
 
 export interface Module {
