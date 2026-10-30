@@ -6,7 +6,7 @@ import type { AddressInfo } from 'node:net';
 import type pg from 'pg';
 import { createApp } from '../app.js';
 import { hashSenha } from '../auth/senha.js';
-import { prepararBanco } from './ajuda.js';
+import { hojeEmFortaleza, prepararBanco, registrosDeUso } from './ajuda.js';
 import { catalogoDeTeste } from './catalogo-de-teste.js';
 import { novoCliente } from './http.js';
 
@@ -79,6 +79,40 @@ test('senha errada e e-mail inexistente recebem a mesma resposta 401', async () 
   assert.equal(senhaErrada.corpo.error.code, 'credenciais_invalidas');
   assert.deepEqual(emailInexistente.corpo, senhaErrada.corpo);
   assert.equal(cliente.cookie, undefined);
+});
+
+test('login certo grava a entrada e o acesso do dia', async () => {
+  const id = await criarUsuario('registro@exemplo.com');
+  const resposta = await novoCliente(baseUrl).enviar('POST', '/api/auth/login', {
+    corpo: { email: 'registro@exemplo.com', password: SENHA },
+  });
+
+  assert.equal(resposta.status, 200);
+  assert.deepEqual(await registrosDeUso(pool, id), { logins: ['login'], dias: [hojeEmFortaleza()] });
+});
+
+test('login errado não grava entrada nem acesso', async () => {
+  const id = await criarUsuario('errou@exemplo.com');
+  const resposta = await novoCliente(baseUrl).enviar('POST', '/api/auth/login', {
+    corpo: { email: 'errou@exemplo.com', password: 'senha-errada' },
+  });
+
+  assert.equal(resposta.status, 401);
+  assert.deepEqual(await registrosDeUso(pool, id), { logins: [], dias: [] });
+});
+
+test('dois GET /api/auth/me no mesmo dia deixam um acesso só', async () => {
+  const id = await criarUsuario('volta@exemplo.com');
+  const cliente = novoCliente(baseUrl);
+  await cliente.enviar('POST', '/api/auth/login', {
+    corpo: { email: 'volta@exemplo.com', password: SENHA },
+  });
+  // Apaga o acesso gravado pelo login, para que o do dia venha só do /me.
+  await pool.query('DELETE FROM acessos_diarios WHERE user_id = $1', [id]);
+
+  assert.equal((await cliente.enviar('GET', '/api/auth/me')).status, 200);
+  assert.equal((await cliente.enviar('GET', '/api/auth/me')).status, 200);
+  assert.deepEqual(await registrosDeUso(pool, id), { logins: ['login'], dias: [hojeEmFortaleza()] });
 });
 
 test('e-mail com espaços e maiúsculas entra na conta normalizada', async () => {
