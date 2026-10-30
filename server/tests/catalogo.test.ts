@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { catalogo, courses, modules, lessons } from '../../shared/catalog.js';
 import type { PerguntaDTO } from '../../shared/contracts.js';
-import { formatarDuracao } from '../../shared/duracao.js';
+import { cargaHorariaEmHoras, duracaoDoCursoEmSegundos, formatarDuracao } from '../../shared/duracao.js';
 import { gabaritoDosExercicios } from '../exercicios/gabarito.js';
 import { gabaritoDoNivelamento } from '../nivelamento/gabarito.js';
 
@@ -95,6 +95,14 @@ test('exerciseMinutes dos módulos, quando existe, é inteiro positivo', () => {
   for (const modulo of modules) {
     if (modulo.exerciseMinutes !== undefined) {
       assert.ok(Number.isInteger(modulo.exerciseMinutes) && modulo.exerciseMinutes > 0, modulo.id);
+    }
+  }
+});
+
+test('cargaHorariaHoras dos cursos, quando existe, é inteiro positivo', () => {
+  for (const curso of courses) {
+    if (curso.cargaHorariaHoras !== undefined) {
+      assert.ok(Number.isInteger(curso.cargaHorariaHoras) && curso.cargaHorariaHoras > 0, curso.id);
     }
   }
 });
@@ -215,4 +223,17 @@ test('formatarDuracao arredonda para minutos e separa horas', () => {
   assert.equal(formatarDuracao(59), '1 min');
   assert.equal(formatarDuracao(3600), '1 h');
   assert.equal(formatarDuracao(5400), '1 h 30 min');
+});
+
+test('cargaHorariaEmHoras usa a carga declarada no curso e, sem ela, a duração arredondada', () => {
+  assert.equal(cargaHorariaEmHoras('ia-docencia'), 8);
+
+  const fonte = {
+    courses: [{ id: 'curso-sem-carga', title: 'Curso', description: '', moduleIds: ['modulo-a'] }],
+    modules: [{ id: 'modulo-a', title: 'Módulo', description: '', exerciseMinutes: 20, color: '', tags: [] }],
+    lessons: [{ id: 'aula-a', moduleId: 'modulo-a', youtubeId: 'abcdefghijk', title: 'Aula', durationSeconds: 8400 }],
+  };
+
+  assert.equal(duracaoDoCursoEmSegundos('curso-sem-carga', fonte), 9600);
+  assert.equal(cargaHorariaEmHoras('curso-sem-carga', fonte), 3);
 });
