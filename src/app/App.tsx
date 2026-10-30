@@ -16,6 +16,7 @@ import { NossosCursos } from './components/NossosCursos';
 import { MeusCertificados } from './components/MeusCertificados';
 import { AulaIndisponivel } from './components/AulaIndisponivel';
 import { ExercicioDialog } from './components/ExercicioDialog';
+import { PraticaDialog } from './components/PraticaDialog';
 import { NivelamentoDialog } from './components/NivelamentoDialog';
 import { ConclusaoDialog } from './components/ConclusaoDialog';
 import { CertificadoDialog } from './components/CertificadoDialog';
@@ -23,6 +24,7 @@ import { Button } from './components/ui/button';
 import { toast, Toaster } from 'sonner';
 import { catalogo, modules, lessons } from '../../shared/catalog';
 import { exercicios } from '../../shared/exercicios';
+import { praticas } from '../../shared/praticas';
 import { perguntasDoNivelamento } from '../../shared/nivelamento';
 import { cursoConcluido, cursoDoModulo, moduloCompleto, moduloLiberado } from '../../shared/progressao';
 import type { CorrecaoDTO, MatriculaDTO, NivelamentoDTO, ResultadoExercicioDTO, UserDTO } from '../../shared/contracts';
@@ -73,6 +75,7 @@ export default function App() {
   const [erroCarregamentoAula, setErroCarregamentoAula] = useState(false);
   const [tentativaCarregamentoAula, setTentativaCarregamentoAula] = useState(0);
   const [exercicioAberto, setExercicioAberto] = useState<string | null>(null);
+  const [praticaAberta, setPraticaAberta] = useState<string | null>(null);
   const [cursoConcluidoAgora, setCursoConcluidoAgora] = useState<string | null>(null);
   const [cursoDoCertificado, setCursoDoCertificado] = useState<string | null>(null);
   const [nivelamento, setNivelamento] = useState<NivelamentoDTO | null>(null);
@@ -186,6 +189,7 @@ export default function App() {
       setResultados(new Map());
       setResultadosCarregados(false);
       setExercicioAberto(null);
+      setPraticaAberta(null);
       setCursoConcluidoAgora(null);
       setCursoDoCertificado(null);
       setNivelamento(null);
@@ -336,6 +340,7 @@ export default function App() {
     setResultados(new Map());
     setResultadosCarregados(false);
     setExercicioAberto(null);
+    setPraticaAberta(null);
     setCursoConcluidoAgora(null);
     setCursoDoCertificado(null);
     setNivelamento(null);
@@ -552,6 +557,7 @@ export default function App() {
           liberado={liberado}
           resultados={resultados}
           onAbrirExercicio={setExercicioAberto}
+          onAbrirPratica={setPraticaAberta}
         />
       );
     }
@@ -570,6 +576,7 @@ export default function App() {
             liberado={liberado}
             resultados={resultados}
             onExercicio={setExercicioAberto}
+            onPratica={setPraticaAberta}
             dispensavel={dispensavel}
             dispensados={dispensados}
             onDispensar={handleDispensar}
@@ -698,6 +705,7 @@ export default function App() {
   // APLICAÇÃO PRINCIPAL - Só renderiza se a guarda de rota for ultrapassada
   // =======================================================================
   const exercicioSelecionado = exercicios.find((exercicio) => exercicio.moduleId === exercicioAberto && exercicio.perguntas.length > 0);
+  const praticaSelecionada = praticas.find((pratica) => pratica.moduleId === praticaAberta);
   const cursoFinalizado = catalogo.courses.find((curso) => curso.id === cursoConcluidoAgora);
   const cursoParaCertificado = catalogo.courses.find((curso) => curso.id === cursoDoCertificado);
 
@@ -720,6 +728,15 @@ export default function App() {
           aberto={true}
           onFechar={() => setExercicioAberto(null)}
           onEnviar={(respostas) => handleEnviarExercicio(exercicioAberto, respostas)}
+        />
+      )}
+
+      {praticaSelecionada && (
+        <PraticaDialog
+          pratica={praticaSelecionada}
+          tituloDoModulo={modules.find((modulo) => modulo.id === praticaAberta).title}
+          aberto={true}
+          onFechar={() => setPraticaAberta(null)}
         />
       )}
 

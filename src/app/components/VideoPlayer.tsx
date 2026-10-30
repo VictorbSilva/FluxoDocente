@@ -6,6 +6,7 @@ import { Badge } from './ui/badge';
 import { Award, CheckCircle, ChevronDown, Clock, Lock, Users } from 'lucide-react';
 import { courses, modules, lessons } from '../../../shared/catalog';
 import { exercicios } from '../../../shared/exercicios';
+import { praticas } from '../../../shared/praticas';
 import type { Lesson, Module, ResultadoExercicioDTO } from '../../../shared/contracts';
 import { anotacao, salvarAnotacao } from '../lib/api';
 
@@ -24,6 +25,7 @@ interface VideoPlayerProps {
   liberado: (moduleId: string) => boolean;
   resultados: ReadonlyMap<string, ResultadoExercicioDTO>;
   onAbrirExercicio: (moduleId: string) => void;
+  onAbrirPratica: (moduleId: string) => void;
 }
 
 export function VideoPlayer({
@@ -38,6 +40,7 @@ export function VideoPlayer({
   liberado,
   resultados,
   onAbrirExercicio,
+  onAbrirPratica,
 }: VideoPlayerProps) {
   const [salvando, setSalvando] = useState(false);
   const [abertos, setAbertos] = useState<Set<string>>(() => new Set());
@@ -407,6 +410,19 @@ export function VideoPlayer({
                           </button>
                         </li>
                       ))}
+                      {avaliacaoVisivel && praticas.some((pratica) => pratica.moduleId === m.id) && (
+                        <li>
+                          <button
+                            type='button'
+                            disabled={bloqueado}
+                            onClick={() => onAbrirPratica(m.id)}
+                            className='w-full p-2 rounded-lg text-left hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50'
+                          >
+                            <span className='block text-sm text-gray-900'>Prática guiada</span>
+                            <span className='block text-xs text-gray-500 mt-1'>Opcional, antes da avaliação</span>
+                          </button>
+                        </li>
+                      )}
                       {avaliacaoVisivel && (
                         <li>
                           <button

@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Play, Clock, Lock } from 'lucide-react';
 import { modules, lessons } from '../../../shared/catalog';
 import { exercicios } from '../../../shared/exercicios';
+import { praticas } from '../../../shared/praticas';
 import type { ResultadoExercicioDTO } from '../../../shared/contracts';
 import { duracaoDoModuloEmSegundos, formatarDuracao } from '../../../shared/duracao';
 
@@ -15,6 +16,7 @@ interface CategoryGridProps {
   liberado?: (moduleId: string) => boolean;
   resultados?: ReadonlyMap<string, ResultadoExercicioDTO>;
   onExercicio?: (moduleId: string) => void;
+  onPratica?: (moduleId: string) => void;
   dispensavel?: (moduleId: string) => boolean;
   dispensados?: ReadonlySet<string>;
   onDispensar?: (moduleId: string) => Promise<void>;
@@ -27,6 +29,7 @@ export function CategoryGrid({
   liberado,
   resultados,
   onExercicio,
+  onPratica,
   dispensavel,
   dispensados,
   onDispensar,
@@ -152,11 +155,18 @@ export function CategoryGrid({
                       {bloqueado ? 'Bloqueado' : total === 0 ? 'Aulas em breve' : 'Começar módulo'}
                     </Button>
                     {onExercicio && (
-                      <div className='min-h-9'>
+                      <div className='min-h-9 space-y-2'>
                         {!bloqueado && temExercicio && (
-                          <Button variant='outline' className='w-full' onClick={() => onExercicio(module.id)}>
-                            {resultado ? 'Refazer avaliação' : 'Fazer avaliação'}
-                          </Button>
+                          <>
+                            {onPratica && praticas.some((pratica) => pratica.moduleId === module.id) && (
+                              <Button variant='outline' className='w-full' onClick={() => onPratica(module.id)}>
+                                Prática guiada
+                              </Button>
+                            )}
+                            <Button variant='outline' className='w-full' onClick={() => onExercicio(module.id)}>
+                              {resultado ? 'Refazer avaliação' : 'Fazer avaliação'}
+                            </Button>
+                          </>
                         )}
                       </div>
                     )}
