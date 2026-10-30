@@ -224,9 +224,9 @@ export const lessons: Lesson[] = [
   {
     id: 'enc-a01',
     moduleId: 'encerramento',
-    youtubeId: 'Q-9P8p9psng',
+    youtubeId: '2mRTaylqmvo',
     title: 'Finalização do curso',
-    durationSeconds: 75,
+    durationSeconds: 67,
   },
 ];
 
