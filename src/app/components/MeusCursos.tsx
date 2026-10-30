@@ -19,6 +19,7 @@ interface MeusCursosProps {
   liberado: (moduleId: string) => boolean;
   resultados: ReadonlyMap<string, ResultadoExercicioDTO>;
   onExercicio: (moduleId: string) => void;
+  onPratica?: (moduleId: string) => void;
   dispensavel: (moduleId: string) => boolean;
   dispensados: ReadonlySet<string>;
   onDispensar: (moduleId: string) => Promise<void>;
@@ -35,6 +36,7 @@ export function MeusCursos({
   liberado,
   resultados,
   onExercicio,
+  onPratica,
   dispensavel,
   dispensados,
   onDispensar,
@@ -112,6 +114,7 @@ export function MeusCursos({
                   liberado={liberado}
                   resultados={resultados}
                   onExercicio={onExercicio}
+                  onPratica={onPratica}
                   dispensavel={dispensavel}
                   dispensados={dispensados}
                   onDispensar={onDispensar}

@@ -107,6 +107,23 @@ export interface Exercicio {
   perguntas: PerguntaDTO[];
 }
 
+export interface ExercicioDaPratica {
+  titulo: string;
+  resumo: string;
+  foco?: string; // conceitos trabalhados, em maiúsculas
+  tarefas: string[];
+}
+
+// Caderno de exercícios práticos de um módulo: opcional, não trava nada e não é guardado.
+export interface PraticaGuiada {
+  moduleId: string;
+  pdf: string; // caminho público do caderno, servido de public/
+  objetivo: string;
+  exercicios: ExercicioDaPratica[];
+  checklist: string[];
+  reflexao: string[];
+}
+
 export interface Catalogo {
   courses: Course[];
   modules: Module[];
