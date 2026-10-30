@@ -48,6 +48,25 @@ function destruirSessao(req: express.Request): Promise<void> {
   });
 }
 
+// Grava a entrada na conta (login ou cadastro), se houver, e o dia de uso.
+// Medir o uso não pode bloquear o acesso: a falha só vai para o log.
+async function registrarUso(pool: pg.Pool, userId: string, origem?: 'login' | 'cadastro'): Promise<void> {
+  try {
+    if (origem) {
+      await pool.query('INSERT INTO logins (user_id, origem) VALUES ($1, $2)', [userId, origem]);
+    }
+
+    await pool.query(
+      `INSERT INTO acessos_diarios (user_id, dia)
+       VALUES ($1, (now() AT TIME ZONE 'America/Fortaleza')::date)
+       ON CONFLICT DO NOTHING`,
+      [userId],
+    );
+  } catch (erro) {
+    console.error('Falha ao registrar o uso da plataforma:', erro);
+  }
+}
+
 export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Router {
   const router = express.Router();
   const exigirLogin = criarExigirLogin(pool, production);
@@ -126,6 +145,7 @@ export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Ro
     // Impressão do mesmo hash que acabou de ser verificado, não de uma nova leitura.
     req.session.senhaImpressao = impressaoDaSenha(usuario.password_hash);
     await salvarSessao(req);
+    await registrarUso(pool, usuario.id, 'login');
 
     const user: UserDTO = { id: usuario.id, email: usuario.email, nome: usuario.nome };
     res.status(200).json({ user });
@@ -180,6 +200,7 @@ export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Ro
     req.session.userId = usuario.id;
     req.session.senhaImpressao = impressaoDaSenha(usuario.password_hash);
     await salvarSessao(req);
+    await registrarUso(pool, usuario.id, 'cadastro');
 
     const user: UserDTO = { id: usuario.id, email: usuario.email, nome: usuario.nome };
     res.status(201).json({ user });
@@ -197,6 +218,8 @@ export function criarRotasDeAuth(pool: pg.Pool, production: boolean): express.Ro
       responderNaoAutenticado(res);
       return;
     }
+
+    await registrarUso(pool, usuario.id);
 
     const user: UserDTO = { id: usuario.id, email: usuario.email, nome: usuario.nome };
     res.status(200).json({ user });

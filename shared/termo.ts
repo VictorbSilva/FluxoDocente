@@ -1,9 +1,9 @@
 // Suba a versão quando o texto do termo mudar.
-export const VERSAO_DO_TERMO = 1;
+export const VERSAO_DO_TERMO = 2;
 
 export const TEXTO_DO_TERMO = `Termo de Consentimento Livre e Esclarecido
 
-Versão 1, de outubro de 2026.
+Versão 2, de outubro de 2026.
 
 Você está sendo convidado(a) a participar da pesquisa "Plataforma Online para capacitação de docentes no uso de ferramentas de inteligência artificial", desenvolvida como Trabalho de Conclusão de Curso em Ciência da Computação no Centro Universitário de João Pessoa (UNIPÊ) por Mirela Ferraz de A. G. de Souza, Patrick Duarte Sardenberg e Victor Gabriel Basilio e Silva, com orientação do professor José Raul de Brito Andrade. Leia este termo com atenção antes de criar sua conta. Se tiver dúvidas, fale com a equipe pelo e-mail fluxodocente40@gmail.com.
 
@@ -29,7 +29,7 @@ Certificado: o código, a carga horária e a data de emissão. O CPF que você d
 
 Recuperação de senha: quando você pede, o site envia ao seu e-mail um link válido por 1 hora. O código desse link é guardado de forma cifrada.
 
-Sessão: um cookie mantém você conectado por até 7 dias. O site não usa cookies de publicidade nem ferramentas de rastreamento.
+Sessão: um cookie mantém você conectado por até 7 dias. O site também registra a data e a hora de cada entrada na conta e os dias em que você usou o site, para medir o uso da plataforma na pesquisa. O site não usa cookies de publicidade nem ferramentas de rastreamento.
 
 4. Como os dados são usados
 

@@ -6,7 +6,7 @@ import type { AddressInfo } from 'node:net';
 import type pg from 'pg';
 import { VERSAO_DO_TERMO } from '../../shared/termo.js';
 import { createApp } from '../app.js';
-import { prepararBanco } from './ajuda.js';
+import { hojeEmFortaleza, prepararBanco, registrosDeUso } from './ajuda.js';
 import { catalogoDeTeste } from './catalogo-de-teste.js';
 import { novoCliente } from './http.js';
 
@@ -29,6 +29,13 @@ function corpoValido(email: string): Record<string, unknown> {
 async function contarUsuarios(): Promise<number> {
   const { rows } = await pool.query<{ total: number }>('SELECT count(*)::int AS total FROM users');
   return rows[0].total;
+}
+
+async function contarRegistrosDeUso(): Promise<{ logins: number; acessos: number }> {
+  const { rows } = await pool.query<{ logins: number; acessos: number }>(
+    'SELECT (SELECT count(*)::int FROM logins) AS logins, (SELECT count(*)::int FROM acessos_diarios) AS acessos',
+  );
+  return rows[0];
 }
 
 let baseUrl: string;
@@ -86,7 +93,38 @@ test('cadastro grava o e-mail normalizado e o aceite do termo', async () => {
   assert.equal(rows[0].email, 'maria.silva@exemplo.com');
   assert.ok(rows[0].termo_aceito_em instanceof Date);
   assert.equal(rows[0].termo_versao, VERSAO_DO_TERMO);
-  assert.equal(VERSAO_DO_TERMO, 1);
+  assert.equal(VERSAO_DO_TERMO, 2);
+});
+
+test('cadastro grava a entrada e o acesso do dia', async () => {
+  const resposta = await novoCliente(baseUrl).enviar('POST', '/api/auth/cadastro', {
+    corpo: corpoValido('registro@exemplo.com'),
+  });
+
+  assert.equal(resposta.status, 201);
+  assert.deepEqual(
+    await registrosDeUso(pool, resposta.corpo.user.id),
+    { logins: ['cadastro'], dias: [hojeEmFortaleza()] },
+  );
+});
+
+test('cadastro recusado não grava entrada nem acesso', async () => {
+  const existente = await novoCliente(baseUrl).enviar('POST', '/api/auth/cadastro', {
+    corpo: corpoValido('recusado@exemplo.com'),
+  });
+  assert.equal(existente.status, 201);
+  const antes = await contarRegistrosDeUso();
+
+  const repetido = await novoCliente(baseUrl).enviar('POST', '/api/auth/cadastro', {
+    corpo: corpoValido('recusado@exemplo.com'),
+  });
+  const semTermo = await novoCliente(baseUrl).enviar('POST', '/api/auth/cadastro', {
+    corpo: { ...corpoValido('sem-termo@exemplo.com'), aceitouTermo: false },
+  });
+
+  assert.equal(repetido.status, 409);
+  assert.equal(semTermo.status, 400);
+  assert.deepEqual(await contarRegistrosDeUso(), antes);
 });
 
 test('o login funciona com a senha escolhida no cadastro', async () => {
