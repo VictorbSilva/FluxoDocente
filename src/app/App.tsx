@@ -116,6 +116,8 @@ export default function App() {
   // O endereço acompanha a tela: corrige um caminho inválido na abertura e
   // aplica o Voltar/Avançar do navegador sem empilhar outra entrada.
   useEffect(() => {
+    // Cada tela abre no topo; o navegador não restaura a rolagem antiga por cima.
+    history.scrollRestoration = 'manual';
     const inicial = lerRota(window.location.pathname);
     const canonico = caminhoDe(inicial.section, inicial.lessonId);
     if (window.location.pathname !== canonico) {
@@ -141,6 +143,11 @@ export default function App() {
     return () => window.removeEventListener('popstate', aoNavegar);
   }, []);
 
+  // Trocar de tela ou de aula, inclusive por Voltar e Avançar, abre no topo.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [currentSection, selectedLessonId]);
+
   // F5 e fechar a aba avisam enquanto houver anotação não salva.
   useEffect(() => {
     const avisarAoSair = (event: BeforeUnloadEvent) => {
@@ -159,6 +166,8 @@ export default function App() {
       if (!window.confirm(PERGUNTA_SAIR_SEM_SALVAR)) return;
       pendenteRef.current = false;
     }
+    // Na mesma tela o estado não muda e o efeito acima não roda.
+    if (!mudaDeLugar) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     setCurrentSection(section);
     setSelectedLessonId(lessonId);
     const caminho = caminhoDe(section, lessonId);
